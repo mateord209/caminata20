@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "652386922399",
+    "project_id": "fitt-fe2e2",
+    "storage_bucket": "fitt-fe2e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:652386922399:android:6f7a6f244338dcfd71d7aa",
+        "android_client_info": {
+          "package_name": "com.example.caminata20"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "652386922399-61ehq2jvqjk3416m0gi9m19ebk6dfi3o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBp5f32qc4lYWLN6RTHH62lTdeEYLM2WNU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "652386922399-61ehq2jvqjk3416m0gi9m19ebk6dfi3o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
