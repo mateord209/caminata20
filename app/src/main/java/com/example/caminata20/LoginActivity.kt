@@ -13,6 +13,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.GoogleAuthProvider
 
 class LoginActivity : AppCompatActivity() {
@@ -88,11 +90,15 @@ class LoginActivity : AppCompatActivity() {
                     if (task.isSuccessful) {
                         goToHome()
                     } else {
-                        Toast.makeText(
-                            this,
-                            "Error: ${task.exception?.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        val mensaje = when (task.exception) {
+                            is FirebaseAuthInvalidUserException ->
+                                "Usuario no encontrado"
+                            is FirebaseAuthInvalidCredentialsException ->
+                                "Correo o contraseña incorrectos"
+                            else ->
+                                "Error al iniciar sesión, intentá de nuevo"
+                        }
+                        Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show()
                     }
                 }
         }

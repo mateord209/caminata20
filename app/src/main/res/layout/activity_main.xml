@@ -1,16 +1,297 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="24dp">
+    android:background="#EDE7F6">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <!-- Header con datos del usuario -->
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Pantalla principal (Home)"
-        android:textSize="24sp" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="#FFFFFF"
+        android:padding="16dp">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@android:drawable/ic_menu_myplaces"
+            app:tint="#3F51B5"
+            android:contentDescription="Usuario" />
+
+        <TextView
+            android:id="@+id/tvUserName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text=""
+            android:textColor="#333333"
+            android:textSize="15sp"
+            android:ellipsize="end"
+            android:maxLines="1" />
+
+        <Button
+            android:id="@+id/btnLogout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cerrar sesión"
+            android:textSize="12sp"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#F44336"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp" />
+
+    </LinearLayout>
+
+    <!-- Contenido principal -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CAMINATAS"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btnStartWalk"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Iniciar caminata"
+                android:backgroundTint="#4CAF50"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnWalkHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Historial de recorridos"
+                android:backgroundTint="#2196F3"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="EJERCICIOS"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="8dp" />
+
+            <Button
+                android:id="@+id/btnExercises"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ejercicios"
+                android:backgroundTint="#FF9800"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="12dp" />
+
+            <Button
+                android:id="@+id/btnExercisesAI"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ejercicios con IA"
+                android:backgroundTint="#9C27B0"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ESTADÍSTICAS DE LA SEMANA"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp">
+
+                <TableLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp">
+
+                    <TableRow>
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="Día"
+                            android:textStyle="bold"
+                            android:padding="4dp" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="Pasos"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:padding="4dp" />
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="Km"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:padding="4dp" />
+                    </TableRow>
+
+                    <TableRow>
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Lunes" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                    </TableRow>
+                    <TableRow>
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Martes" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                    </TableRow>
+                    <TableRow>
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Miércoles" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                    </TableRow>
+                    <TableRow>
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Jueves" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                    </TableRow>
+                    <TableRow>
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Viernes" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                    </TableRow>
+                    <TableRow>
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Sábado" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                    </TableRow>
+                    <TableRow>
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Domingo" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
+                    </TableRow>
+
+                </TableLayout>
+            </androidx.cardview.widget.CardView>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="24dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Barra inferior de navegación -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#FFFFFF"
+        android:elevation="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:gravity="center">
+
+        <LinearLayout
+            android:id="@+id/navHome"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_myplaces" app:tint="#3F51B5" android:contentDescription="Inicio" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Inicio" android:textSize="10sp" android:textColor="#3F51B5" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navProfile"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_myplaces" app:tint="#9E9E9E" android:contentDescription="Perfil" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Perfil" android:textSize="10sp" android:textColor="#9E9E9E" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navTimer"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_recent_history" app:tint="#9E9E9E" android:contentDescription="Temporizador" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Alarmas" android:textSize="10sp" android:textColor="#9E9E9E" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navProgress"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_sort_by_size" app:tint="#9E9E9E" android:contentDescription="Progreso" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Progreso" android:textSize="10sp" android:textColor="#9E9E9E" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navAI"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_manage" app:tint="#9E9E9E" android:contentDescription="IA" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="IA" android:textSize="10sp" android:textColor="#9E9E9E" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navSettings"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_preferences" app:tint="#9E9E9E" android:contentDescription="Configuración" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Ajustes" android:textSize="10sp" android:textColor="#9E9E9E" />
+        </LinearLayout>
+
+    </LinearLayout>
 
 </LinearLayout>

@@ -10,6 +10,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.UserProfileChangeRequest
 
 class RegisterActivity : AppCompatActivity() {
@@ -97,15 +100,21 @@ class RegisterActivity : AppCompatActivity() {
                             .build()
                         user?.updateProfile(profileUpdates)
 
-                        Toast.makeText(this, "Cuenta creada con éxito", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Cuenta creada con éxito", Toast.LENGTH_LONG).show()
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
                     } else {
-                        Toast.makeText(
-                            this,
-                            "Error: ${task.exception?.message}",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        val mensaje = when (task.exception) {
+                            is FirebaseAuthUserCollisionException ->
+                                "Ya existe una cuenta con ese correo"
+                            is FirebaseAuthWeakPasswordException ->
+                                "La contraseña es muy débil, usá una más segura"
+                            is FirebaseAuthInvalidCredentialsException ->
+                                "El correo ingresado no es válido"
+                            else ->
+                                "Error al crear la cuenta, intentá de nuevo"
+                        }
+                        Toast.makeText(this, mensaje, Toast.LENGTH_LONG).show()
                     }
                 }
         }
