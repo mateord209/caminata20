@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "652386922399-s0u31695i4ddsgpfuplcbb6hqiamp4f8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.caminata20",
+            "certificate_hash": "d3543009c5b1f12cc023b4b1b1a9f55c0265436e"
+          }
+        },
+        {
           "client_id": "652386922399-61ehq2jvqjk3416m0gi9m19ebk6dfi3o.apps.googleusercontent.com",
           "client_type": 3
         }

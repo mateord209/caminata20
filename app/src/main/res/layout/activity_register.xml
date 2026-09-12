@@ -11,20 +11,21 @@
         android:gravity="center"
         android:padding="32dp">
 
-        <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:src="@drawable/logo"
-            android:layout_marginBottom="24dp"
-            android:contentDescription="Logo" />
-
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Iniciar sesión"
+            android:text="Crear cuenta"
             android:textSize="26sp"
             android:textStyle="bold"
             android:layout_marginBottom="24dp" />
+
+        <EditText
+            android:id="@+id/etName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nombre completo"
+            android:inputType="textPersonName"
+            android:layout_marginBottom="12dp" />
 
         <EditText
             android:id="@+id/etEmail"
@@ -32,7 +33,6 @@
             android:layout_height="wrap_content"
             android:hint="Correo electrónico"
             android:inputType="textEmailAddress"
-            android:autofillHints="emailAddress"
             android:layout_marginBottom="12dp" />
 
         <LinearLayout
@@ -40,16 +40,15 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="12dp">
 
             <EditText
                 android:id="@+id/etPassword"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="Contraseña"
-                android:inputType="textPassword"
-                android:autofillHints="password" />
+                android:hint="Contraseña (mínimo 6 caracteres)"
+                android:inputType="textPassword" />
 
             <ImageView
                 android:id="@+id/ivTogglePassword"
@@ -62,49 +61,46 @@
                 android:contentDescription="Mostrar u ocultar contraseña" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvForgotPassword"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:text="¿Olvidaste tu contraseña?"
-            android:textColor="#3F51B5"
-            android:layout_marginBottom="20dp"
-            android:clickable="true"
-            android:focusable="true" />
-
-        <Button
-            android:id="@+id/btnLogin"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Iniciar sesión"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="20dp">
+
+            <EditText
+                android:id="@+id/etConfirmPassword"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Confirmar contraseña"
+                android:inputType="textPassword" />
+
+            <ImageView
+                android:id="@+id/ivToggleConfirmPassword"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_eye_hidden"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="Mostrar u ocultar confirmación de contraseña" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnRegister"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Registrarme"
             android:backgroundTint="#3F51B5"
             android:textColor="#FFFFFF"
             android:layout_marginBottom="16dp" />
 
         <TextView
+            android:id="@+id/tvGoToLogin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="— o —"
-            android:layout_marginBottom="16dp" />
-
-        <ImageView
-            android:id="@+id/btnGoogleSignIn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_google"
-            android:scaleType="fitCenter"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_gravity="center"
-            android:layout_marginBottom="24dp"
-            android:contentDescription="Iniciar sesión con Google" />
-
-        <TextView
-            android:id="@+id/tvGoToRegister"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="¿No tenés cuenta? Registrate"
+            android:text="¿Ya tenés cuenta? Iniciá sesión"
             android:textColor="#3F51B5"
             android:clickable="true"
             android:focusable="true" />
