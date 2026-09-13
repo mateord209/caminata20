@@ -28,6 +28,9 @@ class MainActivity : AppCompatActivity() {
             ?: user?.email
             ?: "Invitado")
 
+        // Habilita el efecto marquesina (texto se mueve si es muy largo)
+        tvUserName.isSelected = true
+
         // Botón cerrar sesión
         val btnLogout = findViewById<Button>(R.id.btnLogout)
         btnLogout.setOnClickListener {
@@ -63,8 +66,8 @@ class MainActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.navProfile).setOnClickListener {
             Toast.makeText(this, "Perfil (próximamente)", Toast.LENGTH_SHORT).show()
         }
-        findViewById<LinearLayout>(R.id.navTimer).setOnClickListener {
-            Toast.makeText(this, "Alarmas (próximamente)", Toast.LENGTH_SHORT).show()
+        findViewById<LinearLayout>(R.id.navMap).setOnClickListener {
+            Toast.makeText(this, "Mapa (próximamente)", Toast.LENGTH_SHORT).show()
         }
         findViewById<LinearLayout>(R.id.navProgress).setOnClickListener {
             Toast.makeText(this, "Progreso (próximamente)", Toast.LENGTH_SHORT).show()
@@ -73,7 +76,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "IA (próximamente)", Toast.LENGTH_SHORT).show()
         }
         findViewById<LinearLayout>(R.id.navSettings).setOnClickListener {
-            Toast.makeText(this, "Ajustes (próximamente)", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, ReminderActivity::class.java))
         }
     }
 }

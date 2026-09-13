@@ -98,11 +98,12 @@ class RegisterActivity : AppCompatActivity() {
                         val profileUpdates = UserProfileChangeRequest.Builder()
                             .setDisplayName(name)
                             .build()
-                        user?.updateProfile(profileUpdates)
 
-                        Toast.makeText(this, "Cuenta creada con éxito", Toast.LENGTH_LONG).show()
-                        startActivity(Intent(this, MainActivity::class.java))
-                        finish()
+                        user?.updateProfile(profileUpdates)?.addOnCompleteListener {
+                            Toast.makeText(this, "Cuenta creada con éxito", Toast.LENGTH_LONG).show()
+                            startActivity(Intent(this, MainActivity::class.java))
+                            finish()
+                        }
                     } else {
                         val mensaje = when (task.exception) {
                             is FirebaseAuthUserCollisionException ->

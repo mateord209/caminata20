@@ -32,8 +32,12 @@
             android:text=""
             android:textColor="#333333"
             android:textSize="15sp"
-            android:ellipsize="end"
-            android:maxLines="1" />
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:scrollHorizontally="true" />
 
         <Button
             android:id="@+id/btnLogout"
@@ -127,7 +131,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
+                app:cardElevation="2dp"
+                android:layout_marginBottom="24dp">
 
                 <TableLayout
                     android:layout_width="match_parent"
@@ -135,28 +140,10 @@
                     android:padding="12dp">
 
                     <TableRow>
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:text="Día"
-                            android:textStyle="bold"
-                            android:padding="4dp" />
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:text="Pasos"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:padding="4dp" />
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:text="Km"
-                            android:textStyle="bold"
-                            android:gravity="center"
-                            android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Día" android:textStyle="bold" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Pasos" android:textStyle="bold" android:gravity="center" android:padding="4dp" />
+                        <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Km" android:textStyle="bold" android:gravity="center" android:padding="4dp" />
                     </TableRow>
-
                     <TableRow>
                         <TextView android:layout_width="0dp" android:layout_weight="1" android:text="Lunes" android:padding="4dp" />
                         <TextView android:layout_width="0dp" android:layout_weight="1" android:text="—" android:gravity="center" android:padding="4dp" />
@@ -194,6 +181,102 @@
                     </TableRow>
 
                 </TableLayout>
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RESUMEN"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#555555"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="2dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvTotalSteps"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#3F51B5" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Pasos totales"
+                            android:textSize="12sp"
+                            android:textColor="#777777" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvTotalKm"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 km"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#3F51B5" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Recorrido total"
+                            android:textSize="12sp"
+                            android:textColor="#777777" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <TextView
+                            android:id="@+id/tvWeekTotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 km"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            android:textColor="#3F51B5" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Total semana"
+                            android:textSize="12sp"
+                            android:textColor="#777777" />
+                    </LinearLayout>
+
+                </LinearLayout>
             </androidx.cardview.widget.CardView>
 
             <View
@@ -241,7 +324,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/navTimer"
+            android:id="@+id/navMap"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -249,8 +332,8 @@
             android:gravity="center"
             android:clickable="true"
             android:focusable="true">
-            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_recent_history" app:tint="#9E9E9E" android:contentDescription="Temporizador" />
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Alarmas" android:textSize="10sp" android:textColor="#9E9E9E" />
+            <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@android:drawable/ic_menu_mapmode" app:tint="#9E9E9E" android:contentDescription="Mapa" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mapa" android:textSize="10sp" android:textColor="#9E9E9E" />
         </LinearLayout>
 
         <LinearLayout
