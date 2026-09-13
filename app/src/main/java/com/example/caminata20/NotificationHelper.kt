@@ -7,7 +7,7 @@ import android.media.AudioAttributes
 import android.os.Build
 
 object NotificationHelper {
-    const val CHANNEL_ID = "reminder_channel"
+    const val CHANNEL_ID = "reminder_channel_v2"
 
     fun createChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
