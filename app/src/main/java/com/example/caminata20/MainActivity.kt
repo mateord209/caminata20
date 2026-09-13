@@ -1,5 +1,6 @@
 package com.example.caminata20
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
@@ -31,6 +32,12 @@ class MainActivity : AppCompatActivity() {
         // Habilita el efecto marquesina (texto se mueve si es muy largo)
         tvUserName.isSelected = true
 
+        // Mostrar totales reales de caminata guardados
+        val walkPrefs = getSharedPreferences("walk_stats", Context.MODE_PRIVATE)
+        findViewById<TextView>(R.id.tvTotalSteps).text = walkPrefs.getInt("total_steps", 0).toString()
+        findViewById<TextView>(R.id.tvTotalKm).text = String.format("%.2f km", walkPrefs.getFloat("total_km", 0f))
+        findViewById<TextView>(R.id.tvWeekTotal).text = String.format("%.2f km", walkPrefs.getFloat("week_km", 0f))
+
         // Botón cerrar sesión
         val btnLogout = findViewById<Button>(R.id.btnLogout)
         btnLogout.setOnClickListener {
@@ -45,12 +52,12 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
-        // Botones de contenido (placeholders por ahora)
+        // Botones de contenido
         findViewById<Button>(R.id.btnStartWalk).setOnClickListener {
-            Toast.makeText(this, "Iniciar caminata (próximamente)", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, WalkActivity::class.java))
         }
         findViewById<Button>(R.id.btnWalkHistory).setOnClickListener {
-            Toast.makeText(this, "Historial de recorridos (próximamente)", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, WalkHistoryActivity::class.java))
         }
         findViewById<Button>(R.id.btnExercises).setOnClickListener {
             Toast.makeText(this, "Ejercicios (próximamente)", Toast.LENGTH_SHORT).show()
@@ -59,7 +66,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Ejercicios con IA (próximamente)", Toast.LENGTH_SHORT).show()
         }
 
-        // Barra de navegación inferior (placeholders)
+        // Barra de navegación inferior
         findViewById<LinearLayout>(R.id.navHome).setOnClickListener {
             // Ya estamos en Home
         }
@@ -78,5 +85,14 @@ class MainActivity : AppCompatActivity() {
         findViewById<LinearLayout>(R.id.navSettings).setOnClickListener {
             startActivity(Intent(this, ReminderActivity::class.java))
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresca los totales cada vez que volvemos a esta pantalla (por si se actualizaron)
+        val walkPrefs = getSharedPreferences("walk_stats", Context.MODE_PRIVATE)
+        findViewById<TextView>(R.id.tvTotalSteps).text = walkPrefs.getInt("total_steps", 0).toString()
+        findViewById<TextView>(R.id.tvTotalKm).text = String.format("%.2f km", walkPrefs.getFloat("total_km", 0f))
+        findViewById<TextView>(R.id.tvWeekTotal).text = String.format("%.2f km", walkPrefs.getFloat("week_km", 0f))
     }
 }
