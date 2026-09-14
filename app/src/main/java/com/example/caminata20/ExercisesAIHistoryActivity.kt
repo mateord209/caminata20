@@ -1,8 +1,8 @@
 package com.example.caminata20
 
-import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -11,16 +11,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import org.json.JSONArray
 
-class WalkHistoryActivity : AppCompatActivity() {
+class ExercisesAIHistoryActivity : AppCompatActivity() {
 
     private lateinit var prefs: android.content.SharedPreferences
     private val checkBoxes = mutableListOf<Pair<CheckBox, Int>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_walk_history)
+        setContentView(R.layout.activity_exercises_ai_history)
 
-        prefs = getSharedPreferences("walk_stats", Context.MODE_PRIVATE)
+        prefs = getSharedPreferences("ai_exercises_stats", MODE_PRIVATE)
         loadList()
 
         findViewById<android.widget.Button>(R.id.btnDeleteSelected).setOnClickListener {
@@ -29,26 +29,25 @@ class WalkHistoryActivity : AppCompatActivity() {
     }
 
     private fun loadList() {
-        val container = findViewById<LinearLayout>(R.id.containerSessions)
+        val container = findViewById<LinearLayout>(R.id.containerRoutines)
         container.removeAllViews()
         checkBoxes.clear()
 
-        val sessionsJson = prefs.getString("sessions", "[]")
-        val sessionsArray = JSONArray(sessionsJson)
+        val routinesJson = prefs.getString("routines", "[]")
+        val routinesArray = JSONArray(routinesJson)
 
-        if (sessionsArray.length() == 0) {
+        if (routinesArray.length() == 0) {
             val emptyText = TextView(this)
-            emptyText.text = "Todavía no registraste ninguna caminata."
+            emptyText.text = "Todavía no completaste ninguna rutina de estiramientos."
             emptyText.textSize = 16f
             container.addView(emptyText)
             return
         }
 
-        for (i in sessionsArray.length() - 1 downTo 0) {
-            val session = sessionsArray.getJSONObject(i)
-            val date = session.getString("date")
-            val steps = session.getInt("steps")
-            val km = session.getDouble("km")
+        for (i in routinesArray.length() - 1 downTo 0) {
+            val routine = routinesArray.getJSONObject(i)
+            val date = routine.getString("date")
+            val exercisesArray = routine.getJSONArray("exercises")
 
             val card = CardView(this)
             val cardParams = LinearLayout.LayoutParams(
@@ -63,7 +62,7 @@ class WalkHistoryActivity : AppCompatActivity() {
 
             val rowLayout = LinearLayout(this)
             rowLayout.orientation = LinearLayout.HORIZONTAL
-            rowLayout.gravity = android.view.Gravity.CENTER_VERTICAL
+            rowLayout.gravity = Gravity.TOP
 
             val checkBox = CheckBox(this)
             checkBoxes.add(Pair(checkBox, i))
@@ -77,14 +76,16 @@ class WalkHistoryActivity : AppCompatActivity() {
             tvDate.text = date
             tvDate.textSize = 13f
             tvDate.setTextColor(Color.parseColor("#777777"))
-
-            val tvDetails = TextView(this)
-            tvDetails.text = "$steps pasos · %.2f km".format(km)
-            tvDetails.textSize = 16f
-            tvDetails.setTextColor(Color.parseColor("#3F51B5"))
-
             innerLayout.addView(tvDate)
-            innerLayout.addView(tvDetails)
+
+            for (j in 0 until exercisesArray.length()) {
+                val ex = exercisesArray.getJSONObject(j)
+                val tvEx = TextView(this)
+                tvEx.text = "• ${ex.getString("name")} — ${ex.getInt("sets")}x${ex.getInt("reps")}"
+                tvEx.textSize = 15f
+                tvEx.setTextColor(Color.parseColor("#3F51B5"))
+                innerLayout.addView(tvEx)
+            }
 
             rowLayout.addView(checkBox)
             rowLayout.addView(innerLayout)
@@ -97,26 +98,26 @@ class WalkHistoryActivity : AppCompatActivity() {
         val indicesToDelete = checkBoxes.filter { it.first.isChecked }.map { it.second }.sortedDescending()
 
         if (indicesToDelete.isEmpty()) {
-            Toast.makeText(this, "No seleccionaste ninguno", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "No seleccionaste ninguna", Toast.LENGTH_SHORT).show()
             return
         }
 
         androidx.appcompat.app.AlertDialog.Builder(this)
             .setTitle("Confirmar eliminación")
-            .setMessage("¿Estás seguro de eliminar ${indicesToDelete.size} recorrido(s)? Esta acción no se puede deshacer.")
+            .setMessage("¿Estás seguro de eliminar ${indicesToDelete.size} rutina(s)? Esta acción no se puede deshacer.")
             .setPositiveButton("Eliminar") { _, _ ->
-                val sessionsJson = prefs.getString("sessions", "[]")
-                val sessionsArray = JSONArray(sessionsJson)
+                val routinesJson = prefs.getString("routines", "[]")
+                val routinesArray = JSONArray(routinesJson)
                 val newArray = JSONArray()
 
-                for (i in 0 until sessionsArray.length()) {
+                for (i in 0 until routinesArray.length()) {
                     if (!indicesToDelete.contains(i)) {
-                        newArray.put(sessionsArray.getJSONObject(i))
+                        newArray.put(routinesArray.getJSONObject(i))
                     }
                 }
 
-                prefs.edit().putString("sessions", newArray.toString()).apply()
-                Toast.makeText(this, "Eliminado(s) ${indicesToDelete.size}", Toast.LENGTH_SHORT).show()
+                prefs.edit().putString("routines", newArray.toString()).apply()
+                Toast.makeText(this, "Eliminada(s) ${indicesToDelete.size}", Toast.LENGTH_SHORT).show()
                 loadList()
             }
             .setNegativeButton("Cancelar", null)

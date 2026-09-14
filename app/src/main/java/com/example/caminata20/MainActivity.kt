@@ -29,16 +29,13 @@ class MainActivity : AppCompatActivity() {
             ?: user?.email
             ?: "Invitado")
 
-        // Habilita el efecto marquesina (texto se mueve si es muy largo)
         tvUserName.isSelected = true
 
-        // Mostrar totales reales de caminata guardados
         val walkPrefs = getSharedPreferences("walk_stats", Context.MODE_PRIVATE)
         findViewById<TextView>(R.id.tvTotalSteps).text = walkPrefs.getInt("total_steps", 0).toString()
         findViewById<TextView>(R.id.tvTotalKm).text = String.format("%.2f km", walkPrefs.getFloat("total_km", 0f))
         findViewById<TextView>(R.id.tvWeekTotal).text = String.format("%.2f km", walkPrefs.getFloat("week_km", 0f))
 
-        // Botón cerrar sesión
         val btnLogout = findViewById<Button>(R.id.btnLogout)
         btnLogout.setOnClickListener {
             val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
@@ -52,21 +49,22 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
-        // Botones de contenido
         findViewById<Button>(R.id.btnStartWalk).setOnClickListener {
             startActivity(Intent(this, WalkActivity::class.java))
         }
+
         findViewById<Button>(R.id.btnWalkHistory).setOnClickListener {
             startActivity(Intent(this, WalkHistoryActivity::class.java))
         }
-        findViewById<Button>(R.id.btnExercises).setOnClickListener {
-            Toast.makeText(this, "Ejercicios (próximamente)", Toast.LENGTH_SHORT).show()
-        }
+
         findViewById<Button>(R.id.btnExercisesAI).setOnClickListener {
-            Toast.makeText(this, "Ejercicios con IA (próximamente)", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, ExercisesAIActivity::class.java))
         }
 
-        // Barra de navegación inferior
+        findViewById<Button>(R.id.btnExercisesAIHistory).setOnClickListener {
+            startActivity(Intent(this, ExercisesAIHistoryActivity::class.java))
+        }
+
         findViewById<LinearLayout>(R.id.navHome).setOnClickListener {
             // Ya estamos en Home
         }
@@ -89,7 +87,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Refresca los totales cada vez que volvemos a esta pantalla (por si se actualizaron)
         val walkPrefs = getSharedPreferences("walk_stats", Context.MODE_PRIVATE)
         findViewById<TextView>(R.id.tvTotalSteps).text = walkPrefs.getInt("total_steps", 0).toString()
         findViewById<TextView>(R.id.tvTotalKm).text = String.format("%.2f km", walkPrefs.getFloat("total_km", 0f))

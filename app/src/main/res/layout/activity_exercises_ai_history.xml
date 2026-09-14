@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Historial de recorridos"
+        android:text="Historial de ejercicios IA"
         android:textSize="22sp"
         android:textStyle="bold"
         android:padding="16dp" />
@@ -19,7 +19,7 @@
         android:layout_weight="1">
 
         <LinearLayout
-            android:id="@+id/containerSessions"
+            android:id="@+id/containerRoutines"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"

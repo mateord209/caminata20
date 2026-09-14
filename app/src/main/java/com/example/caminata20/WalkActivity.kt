@@ -48,11 +48,14 @@ class WalkActivity : AppCompatActivity() {
                 startService(Intent(this, WalkTrackingService::class.java).apply {
                     action = WalkTrackingService.ACTION_START
                 })
-                updateButtonState()
+                btnToggleWalk.text = "Finalizar caminata"
+                btnToggleWalk.setBackgroundColor(0xFFF44336.toInt())
             } else {
                 startService(Intent(this, WalkTrackingService::class.java).apply {
                     action = WalkTrackingService.ACTION_STOP
                 })
+                btnToggleWalk.text = "Iniciar caminata"
+                btnToggleWalk.setBackgroundColor(0xFF4CAF50.toInt())
                 Toast.makeText(this, "Caminata finalizada y guardada", Toast.LENGTH_LONG).show()
                 Handler(Looper.getMainLooper()).postDelayed({
                     val intent = Intent(this, MainActivity::class.java)

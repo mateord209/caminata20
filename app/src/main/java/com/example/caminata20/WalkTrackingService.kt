@@ -131,7 +131,7 @@ class WalkTrackingService : Service(), SensorEventListener {
         val sessionsJson = prefs.getString("sessions", "[]")
         val sessionsArray = JSONArray(sessionsJson)
         val newSession = JSONObject()
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        val dateFormat = SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.getDefault())
         newSession.put("date", dateFormat.format(Date()))
         newSession.put("steps", steps)
         newSession.put("km", km)
