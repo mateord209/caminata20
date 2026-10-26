@@ -23,6 +23,9 @@ class AlarmReceiver : BroadcastReceiver() {
             }
         }
 
+        // Avisos del temporizador/posponer (HU-03) no reprograman el recordatorio diario
+        if (intent.getBooleanExtra(EXTRA_FROM_TIMER, false)) return
+
         // Reprogramar para mañana, a la misma hora
         val prefs = context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
         val hour = prefs.getInt("hour", -1)
@@ -49,5 +52,9 @@ class AlarmReceiver : BroadcastReceiver() {
                 nextPendingIntent
             )
         }
+    }
+
+    companion object {
+        const val EXTRA_FROM_TIMER = "extra_from_timer"
     }
 }

@@ -54,9 +54,19 @@ object PauseNotifier {
             .setVibrate(longArrayOf(0, 500, 200, 500, 200, 500))
             .setContentIntent(contentIntent)
             .setAutoCancel(true)
+            // HU-03: acciones directas
+            .addAction(0, "✓ Completar", actionIntent(context, PauseActionReceiver.ACTION_COMPLETE, 11))
+            .addAction(0, "⏱ Posponer 5 min", actionIntent(context, PauseActionReceiver.ACTION_SNOOZE, 12))
 
         notify(context, builder.build())
     }
+
+    private fun actionIntent(context: Context, action: String, requestCode: Int): PendingIntent =
+        PendingIntent.getBroadcast(
+            context, requestCode,
+            Intent(context, PauseActionReceiver::class.java).setAction(action),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
     fun notify(context: Context, notification: android.app.Notification, id: Int = NOTIFICATION_ID) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||

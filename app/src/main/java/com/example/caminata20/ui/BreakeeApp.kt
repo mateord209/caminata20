@@ -20,6 +20,7 @@ import com.example.caminata20.ui.pausetype.PauseTypeScreen
 import com.example.caminata20.ui.myday.MyDayScreen
 import com.example.caminata20.ui.profile.ProfileScreen
 import com.example.caminata20.ui.guide.GuideScreen
+import com.example.caminata20.ui.alerts.AlertsScreen
 
 @Composable
 fun BreakeeApp(startRoute: String? = null) {
@@ -46,7 +47,7 @@ fun BreakeeApp(startRoute: String? = null) {
     ) { padding ->
         NavHost(nav, startDestination = BreakeeTab.INICIO.route, modifier = Modifier.padding(padding)) {
             composable(BreakeeTab.INICIO.route) { HomeScreen(onNavigate = { nav.navigate(it) }) }
-            composable(BreakeeTab.ALERTAS.route) { StatsScreen(title = "Alertas") }
+            composable(BreakeeTab.ALERTAS.route) { AlertsScreen(onConfigure = { nav.navigate(Routes.PAUSE_TYPE) }) }
             composable(BreakeeTab.MI_DIA.route) { MyDayScreen(onOpenProfile = { nav.navigate(Routes.PROFILE) }, onStartExercise = { nav.navigate(Routes.guide(it)) }) }
             composable(BreakeeTab.ESTADISTICAS.route) { StatsScreen(title = "Estadísticas") }
             composable(Routes.GUIDE) { entry ->
