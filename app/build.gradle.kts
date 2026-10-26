@@ -8,12 +8,13 @@ if (localPropertiesFile.exists()) {
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.caminata20"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.caminata20"
@@ -46,6 +47,7 @@ android {
     }
     buildFeatures {
         buildConfig = true
+        compose = true
     }
 }
 
@@ -57,6 +59,22 @@ dependencies {
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Jetpack Compose (BreakeeTheme + componentes ui/components)
+    val composeBom = platform(libs.androidx.compose.bom)
+    implementation(composeBom)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.ui.text.google.fonts)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.datastore.preferences)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.appcompat)

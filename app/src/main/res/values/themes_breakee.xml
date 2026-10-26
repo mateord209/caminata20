@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema de ventana para las Activities Compose (los colores reales vienen de BreakeeTheme). -->
+    <style name="Theme.Breakee" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/breakee_background</item>
+        <item name="colorPrimary">@color/breakee_primary</item>
+    </style>
+</resources>

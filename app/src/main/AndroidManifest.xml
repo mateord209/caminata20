@@ -60,6 +60,11 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".BreakeeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Breakee" />
+
+        <activity
             android:name=".ReminderActivity"
             android:exported="false" />
         <activity

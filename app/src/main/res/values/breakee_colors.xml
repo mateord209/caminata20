@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Breakee design system — light palette -->
+<resources>
+    <color name="breakee_primary">#2F7A57</color>
+    <color name="breakee_onPrimary">#FFFFFF</color>
+    <color name="breakee_primaryContainer">#CDEBD9</color>
+    <color name="breakee_onPrimaryContainer">#0F3A26</color>
+    <color name="breakee_secondary">#3F7F7A</color>
+    <color name="breakee_onSecondary">#FFFFFF</color>
+    <color name="breakee_secondaryContainer">#D3EEEA</color>
+    <color name="breakee_onSecondaryContainer">#123B37</color>
+    <color name="breakee_background">#F4FAF6</color>
+    <color name="breakee_surface">#FFFFFF</color>
+    <color name="breakee_surfaceVariant">#E4F2EA</color>
+    <color name="breakee_outline">#B9D3C5</color>
+    <color name="breakee_onBackground">#17322A</color>
+    <color name="breakee_onSurface">#17322A</color>
+    <color name="breakee_onSurfaceVariant">#4A6358</color>
+    <color name="breakee_success">#2E7D32</color>
+    <color name="breakee_warning">#9A5B00</color>
+    <color name="breakee_error">#B3261E</color>
+    <color name="breakee_successContainer">#DCF2DD</color>
+    <color name="breakee_warningContainer">#FCEBCF</color>
+    <color name="breakee_errorContainer">#FADCD9</color>
+    <color name="breakee_inverseSurface">#1F3A30</color>
+    <color name="breakee_inverseOnSurface">#E3F1E9</color>
+</resources>

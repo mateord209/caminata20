@@ -117,7 +117,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun goToHome() {
-        startActivity(Intent(this, MainActivity::class.java))
+        // Breakee (Compose) es la nueva home; MainActivity (XML) sigue accesible desde Inicio.
+        startActivity(Intent(this, BreakeeActivity::class.java))
         finish()
     }
 }
