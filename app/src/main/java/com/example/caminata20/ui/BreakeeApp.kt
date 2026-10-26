@@ -19,6 +19,7 @@ import com.example.caminata20.ui.stats.StatsScreen
 import com.example.caminata20.ui.pausetype.PauseTypeScreen
 import com.example.caminata20.ui.myday.MyDayScreen
 import com.example.caminata20.ui.profile.ProfileScreen
+import com.example.caminata20.ui.guide.GuideScreen
 
 @Composable
 fun BreakeeApp(startRoute: String? = null) {
@@ -46,8 +47,11 @@ fun BreakeeApp(startRoute: String? = null) {
         NavHost(nav, startDestination = BreakeeTab.INICIO.route, modifier = Modifier.padding(padding)) {
             composable(BreakeeTab.INICIO.route) { HomeScreen(onNavigate = { nav.navigate(it) }) }
             composable(BreakeeTab.ALERTAS.route) { StatsScreen(title = "Alertas") }
-            composable(BreakeeTab.MI_DIA.route) { MyDayScreen(onOpenProfile = { nav.navigate(Routes.PROFILE) }) }
+            composable(BreakeeTab.MI_DIA.route) { MyDayScreen(onOpenProfile = { nav.navigate(Routes.PROFILE) }, onStartExercise = { nav.navigate(Routes.guide(it)) }) }
             composable(BreakeeTab.ESTADISTICAS.route) { StatsScreen(title = "Estadísticas") }
+            composable(Routes.GUIDE) { entry ->
+                GuideScreen(exerciseId = entry.arguments?.getString("exerciseId"), onBack = { nav.popBackStack() })
+            }
             composable(Routes.PROFILE) { ProfileScreen(onBack = { nav.popBackStack() }) }
             composable(Routes.PAUSE_TYPE) { PauseTypeScreen(onBack = { nav.popBackStack() }) }
         }
@@ -58,4 +62,6 @@ fun BreakeeApp(startRoute: String? = null) {
 object Routes {
     const val PAUSE_TYPE = "tipo_pausa"
     const val PROFILE = "perfil"
+    const val GUIDE = "guia/{exerciseId}"
+    fun guide(exerciseId: String) = "guia/$exerciseId"
 }

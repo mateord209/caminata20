@@ -9,7 +9,10 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.example.caminata20.MainActivity
+import com.example.caminata20.BreakeeActivity
+import com.example.caminata20.data.ExerciseCatalog
+import com.example.caminata20.ui.Routes
+import kotlinx.coroutines.flow.first
 import com.example.caminata20.NotificationHelper
 import com.example.caminata20.data.SettingsRepository
 
@@ -21,10 +24,17 @@ object PauseNotifier {
         NotificationHelper.createChannel(context)
         val settings = SettingsRepository(context).current()
         val type = settings.type
+        val repo = SettingsRepository(context)
+        // HU-16: ejercicio del catálogo local (rota dentro del tipo elegido)
+        val exercise = ExerciseCatalog.next(type, repo.lastExerciseId.first())
+        repo.setLastExercise(exercise.id)
 
-        val openAppIntent = Intent(context, MainActivity::class.java)
+        // Al tocar la notificación se abre la pantalla guía del ejercicio
+        val openGuideIntent = Intent(context, BreakeeActivity::class.java)
+            .putExtra(BreakeeActivity.EXTRA_ROUTE, Routes.guide(exercise.id))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val contentIntent = PendingIntent.getActivity(
-            context, 0, openAppIntent,
+            context, 0, openGuideIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -32,7 +42,12 @@ object PauseNotifier {
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             // HU-08: la notificación muestra la categoría elegida
             .setContentTitle("${type.emoji} ${type.notificationTitle}")
-            .setContentText("${type.description} (${settings.durationMin} min)")
+            .setContentText("${exercise.name} · ${exercise.durationLabel}")
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .setBigContentTitle("${type.emoji} ${type.notificationTitle} — ${exercise.name}")
+                    .bigText("${exercise.instructions}\n(${exercise.durationLabel} · ${exercise.area})")
+            )
             .setSubText(type.title)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

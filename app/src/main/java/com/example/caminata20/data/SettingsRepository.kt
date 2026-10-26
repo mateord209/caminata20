@@ -15,6 +15,7 @@ class SettingsRepository(private val context: Context) {
     private object Keys {
         val PAUSE_TYPE = stringPreferencesKey("pause_type")
         val PAUSE_DURATION = intPreferencesKey("pause_duration_min")
+        val LAST_EXERCISE = stringPreferencesKey("last_exercise_id")
     }
 
     val pauseSettings: Flow<PauseSettings> = context.breakeeDataStore.data.map {
@@ -22,6 +23,13 @@ class SettingsRepository(private val context: Context) {
     }
 
     suspend fun current(): PauseSettings = pauseSettings.first()
+
+    /** HU-16: último ejercicio sugerido/notificado (para rotar y para la pantalla guía). */
+    val lastExerciseId: Flow<String?> = context.breakeeDataStore.data.map { it[Keys.LAST_EXERCISE] }
+
+    suspend fun setLastExercise(id: String) {
+        context.breakeeDataStore.edit { it[Keys.LAST_EXERCISE] = id }
+    }
 
     suspend fun savePauseSettings(type: PauseType, durationMin: Int) {
         context.breakeeDataStore.edit {

@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.caminata20.data.PauseStatus
 import com.example.caminata20.ui.components.BreakeeCard
 import com.example.caminata20.ui.components.ProgressBar
+import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.StatCard
 import com.example.caminata20.ui.components.StatusBadge
 import com.example.caminata20.ui.components.TopBar
@@ -38,7 +39,7 @@ import java.util.Locale
 
 /** HU-12: Mi Día. */
 @Composable
-fun MyDayScreen(onOpenProfile: () -> Unit, extraContent: @Composable () -> Unit = {}, vm: MyDayViewModel = viewModel()) {
+fun MyDayScreen(onOpenProfile: () -> Unit, onStartExercise: (String) -> Unit = {}, vm: MyDayViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val locale = Locale.forLanguageTag("es-CO")
     val today = SimpleDateFormat("EEEE, d 'de' MMMM", locale).format(Date()).replaceFirstChar { it.titlecase(locale) }
@@ -68,7 +69,20 @@ fun MyDayScreen(onOpenProfile: () -> Unit, extraContent: @Composable () -> Unit 
                 StatCard("${state.totalMinutes} min", "Tiempo total", Icons.Filled.Timer, Modifier.weight(1f))
                 StatCard("${state.percent}%", "Meta de hoy", Icons.Filled.EmojiEvents, Modifier.weight(1f))
             }
-            extraContent()
+            state.suggested?.let { ex ->
+                Text("Ejercicio sugerido", style = MaterialTheme.typography.titleLarge)
+                BreakeeCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(ex.type.emoji, style = MaterialTheme.typography.headlineMedium)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(ex.name, style = MaterialTheme.typography.titleMedium)
+                            Text("${ex.durationLabel} · ${ex.area}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        PrimaryButton("Iniciar", onClick = { onStartExercise(ex.id) })
+                    }
+                }
+            }
             Text("Historial de hoy", style = MaterialTheme.typography.titleLarge)
             if (state.todayRecords.isEmpty()) {
                 Text("Aún no registras pausas hoy.", color = MaterialTheme.colorScheme.onSurfaceVariant)
