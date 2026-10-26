@@ -60,4 +60,9 @@ private fun HomeExtraSections(onNavigate: (String) -> Unit) {
         Text("Tipo de pausa", style = MaterialTheme.typography.titleLarge)
         Text("Estiramiento, descanso visual, respiración o hidratación", style = MaterialTheme.typography.bodyMedium)
     }
+    // HU-12
+    BreakeeCard(onClick = { onNavigate(Routes.PROFILE) }) {
+        Text("Mi Perfil", style = MaterialTheme.typography.titleLarge)
+        Text("Nombre y meta diaria de pausas", style = MaterialTheme.typography.bodyMedium)
+    }
 }
