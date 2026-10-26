@@ -5,36 +5,22 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
+import com.example.caminata20.notifications.PauseNotifier
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        NotificationHelper.createChannel(context)
-
-        val openAppIntent = Intent(context, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            context, 0, openAppIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = NotificationCompat.Builder(context, NotificationHelper.CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("¡Es hora de moverte!")
-            .setContentText("Levantate y caminá un poco, tu cuerpo te lo va a agradecer.")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setVibrate(longArrayOf(0, 500, 200, 500, 200, 500))
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .build()
-
-        if (androidx.core.content.ContextCompat.checkSelfPermission(
-                context, android.Manifest.permission.POST_NOTIFICATIONS
-            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-            || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU
-        ) {
-            NotificationManagerCompat.from(context).notify(1001, notification)
+        // HU-08: la notificación se arma con la categoría guardada (DataStore → goAsync)
+        val pending = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                PauseNotifier.show(context)
+            } finally {
+                pending.finish()
+            }
         }
 
         // Reprogramar para mañana, a la misma hora

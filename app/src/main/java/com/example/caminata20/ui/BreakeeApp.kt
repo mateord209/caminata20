@@ -16,6 +16,7 @@ import com.example.caminata20.ui.components.BottomNavBar
 import com.example.caminata20.ui.components.BreakeeTab
 import com.example.caminata20.ui.home.HomeScreen
 import com.example.caminata20.ui.stats.StatsScreen
+import com.example.caminata20.ui.pausetype.PauseTypeScreen
 
 @Composable
 fun BreakeeApp(startRoute: String? = null) {
@@ -45,6 +46,12 @@ fun BreakeeApp(startRoute: String? = null) {
             composable(BreakeeTab.ALERTAS.route) { StatsScreen(title = "Alertas") }
             composable(BreakeeTab.MI_DIA.route) { StatsScreen(title = "Mi Día") }
             composable(BreakeeTab.ESTADISTICAS.route) { StatsScreen(title = "Estadísticas") }
+            composable(Routes.PAUSE_TYPE) { PauseTypeScreen(onBack = { nav.popBackStack() }) }
         }
     }
+}
+
+/** Rutas fuera de la barra inferior. */
+object Routes {
+    const val PAUSE_TYPE = "tipo_pausa"
 }

@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.caminata20.MainActivity
+import com.example.caminata20.ui.Routes
 import com.example.caminata20.ui.components.BreakeeCard
 import com.example.caminata20.ui.components.SecondaryButton
 import com.example.caminata20.ui.components.TopBar
@@ -54,4 +55,9 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
 /** Secciones que añaden las HU (tipo de pausa, perfil...). */
 @Composable
 private fun HomeExtraSections(onNavigate: (String) -> Unit) {
+    // HU-08
+    BreakeeCard(highlighted = true, onClick = { onNavigate(Routes.PAUSE_TYPE) }) {
+        Text("Tipo de pausa", style = MaterialTheme.typography.titleLarge)
+        Text("Estiramiento, descanso visual, respiración o hidratación", style = MaterialTheme.typography.bodyMedium)
+    }
 }
