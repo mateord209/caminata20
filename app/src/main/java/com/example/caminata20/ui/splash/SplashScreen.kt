@@ -33,7 +33,7 @@ fun SplashScreen(onDestination: (SplashDestination) -> Unit, vm: SplashViewModel
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Image(painterResource(R.drawable.logo), contentDescription = stringResource(R.string.app_name), modifier = Modifier.size(140.dp))
+        Image(painterResource(R.drawable.logo_breakee), contentDescription = stringResource(R.string.app_name), modifier = Modifier.size(140.dp))
         Spacer(Modifier.height(16.dp))
         Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, color = cs.onBackground)
     }

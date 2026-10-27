@@ -24,4 +24,6 @@
     <color name="breakee_errorContainer">#5C1F1B</color>
     <color name="breakee_inverseSurface">#E3F1E9</color>
     <color name="breakee_inverseOnSurface">#17322A</color>
+    <!-- Círculo detrás de la figura en el SplashScreen de Android 12+ -->
+    <color name="breakee_splash_icon_bg">#E3F4EA</color>
 </resources>

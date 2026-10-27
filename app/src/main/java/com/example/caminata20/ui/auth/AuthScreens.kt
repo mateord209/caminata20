@@ -133,7 +133,7 @@ fun LoginScreen(
 
     AuthColumn {
         Spacer(Modifier.height(32.dp))
-        Image(painterResource(R.drawable.logo), contentDescription = null, modifier = Modifier.size(110.dp))
+        Image(painterResource(R.drawable.logo_breakee), contentDescription = null, modifier = Modifier.size(110.dp))
         Text("Iniciar sesión", style = MaterialTheme.typography.headlineMedium)
         AuthField(state.email, vm::onEmail, "Correo", Icons.Filled.Email, KeyboardType.Email)
         AuthField(state.password, vm::onPassword, "Contraseña", Icons.Filled.Lock, password = true)

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+: el SplashScreen del sistema usa la figura nueva de Breakee (capa frontal del
+         ícono adaptativo) sobre el color de fondo del tema (claro/oscuro vía values-night). -->
+    <style name="Theme.Breakee" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/breakee_background</item>
+        <item name="android:colorPrimary">@color/breakee_primary</item>
+        <item name="android:colorAccent">@color/breakee_primary</item>
+        <item name="android:windowSplashScreenBackground">@color/breakee_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/breakee_splash_icon_bg</item>
+    </style>
+</resources>
