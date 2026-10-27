@@ -1,4 +1,4 @@
-package com.example.caminata20.data
+package com.example.caminata20.domain.model
 
 /** HU-08: categorías de pausa activa. */
 enum class PauseType(val title: String, val notificationTitle: String, val description: String, val emoji: String) {

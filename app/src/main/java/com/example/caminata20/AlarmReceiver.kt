@@ -1,57 +1,47 @@
 package com.example.caminata20
 
-import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.example.caminata20.domain.model.ReminderTime
+import com.example.caminata20.domain.repository.LocalStateRepository
+import com.example.caminata20.domain.repository.ReminderScheduler
 import com.example.caminata20.notifications.PauseNotifier
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import javax.inject.Inject
 
+/** Dispara la notificación de pausa y reprograma el recordatorio diario. */
+@AndroidEntryPoint
 class AlarmReceiver : BroadcastReceiver() {
+    @Inject lateinit var notifier: PauseNotifier
+    @Inject lateinit var local: LocalStateRepository
+    @Inject lateinit var reminderScheduler: ReminderScheduler
+
     override fun onReceive(context: Context, intent: Intent) {
-        // HU-08: la notificación se arma con la categoría guardada (DataStore → goAsync)
+        val fromTimer = intent.getBooleanExtra(EXTRA_FROM_TIMER, false)
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                PauseNotifier.show(context)
+                notifier.show()
+                // Avisos del temporizador/posponer (HU-03) no reprograman el recordatorio diario
+                if (!fromTimer) {
+                    val time = local.cachedReminder() ?: legacyReminder(context)
+                    time?.let { reminderScheduler.schedule(it) }
+                }
             } finally {
                 pending.finish()
             }
         }
+    }
 
-        // Avisos del temporizador/posponer (HU-03) no reprograman el recordatorio diario
-        if (intent.getBooleanExtra(EXTRA_FROM_TIMER, false)) return
-
-        // Reprogramar para mañana, a la misma hora
+    // TODO(limpieza): eliminar cuando todos los usuarios hayan migrado (LegacyDataMigrator).
+    private fun legacyReminder(context: Context): ReminderTime? {
         val prefs = context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
-        val hour = prefs.getInt("hour", -1)
-        val minute = prefs.getInt("minute", -1)
-
-        if (hour >= 0) {
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val nextIntent = Intent(context, AlarmReceiver::class.java)
-            val nextPendingIntent = PendingIntent.getBroadcast(
-                context, 0, nextIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-
-            val calendar = Calendar.getInstance().apply {
-                add(Calendar.DAY_OF_YEAR, 1)
-                set(Calendar.HOUR_OF_DAY, hour)
-                set(Calendar.MINUTE, minute)
-                set(Calendar.SECOND, 0)
-            }
-
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                nextPendingIntent
-            )
-        }
+        val h = prefs.getInt("hour", -1)
+        return if (h >= 0) ReminderTime(h, prefs.getInt("minute", 0)) else null
     }
 
     companion object {

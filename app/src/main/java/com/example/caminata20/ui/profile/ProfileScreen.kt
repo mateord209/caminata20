@@ -31,23 +31,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.caminata20.LoginActivity
-import com.example.caminata20.data.ProfileRepository
+import com.example.caminata20.domain.model.Profile
 import com.example.caminata20.ui.components.BreakeeCard
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.Stepper
 import com.example.caminata20.ui.components.TopBar
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
 
 /** HU-12: Mi Perfil. */
 @Composable
-fun ProfileScreen(onBack: () -> Unit, vm: ProfileViewModel = viewModel()) {
+fun ProfileScreen(onBack: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val range = ProfileRepository.GOAL_RANGE
+    val range = Profile.GOAL_RANGE
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Mi Perfil", onBack = onBack)
         Column(
@@ -114,7 +113,7 @@ fun ProfileScreen(onBack: () -> Unit, vm: ProfileViewModel = viewModel()) {
             )
             TextButton(onClick = {
                 GoogleSignIn.getClient(context, GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()).signOut()
-                FirebaseAuth.getInstance().signOut()
+                vm.signOut()
                 context.startActivity(
                     Intent(context, LoginActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 )

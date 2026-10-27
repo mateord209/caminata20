@@ -1,13 +1,14 @@
 package com.example.caminata20.ui.guide
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.caminata20.data.Exercise
-import com.example.caminata20.data.ExerciseCatalog
-import com.example.caminata20.data.PauseHistoryRepository
-import com.example.caminata20.data.PauseRecord
-import com.example.caminata20.data.PauseStatus
+import com.example.caminata20.data.local.ExerciseCatalog
+import com.example.caminata20.domain.model.Exercise
+import com.example.caminata20.domain.model.PauseRecord
+import com.example.caminata20.domain.model.PauseStatus
+import com.example.caminata20.domain.repository.PauseHistoryRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,8 +37,10 @@ data class GuideUiState(
 }
 
 /** HU-16: pantalla guía con temporizador y pasos. */
-class GuideViewModel(app: Application) : AndroidViewModel(app) {
-    private val history = PauseHistoryRepository(app)
+@HiltViewModel
+class GuideViewModel @Inject constructor(
+    private val history: PauseHistoryRepository,
+) : ViewModel() {
     private val _state = MutableStateFlow(GuideUiState())
     val state: StateFlow<GuideUiState> = _state.asStateFlow()
     private var ticker: Job? = null

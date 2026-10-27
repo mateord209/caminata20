@@ -29,11 +29,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.caminata20.ui.components.PrimaryButton
 
 @Composable
-fun OnboardingScreen(onFinished: () -> Unit, vm: OnboardingViewModel = viewModel()) {
+fun OnboardingScreen(onFinished: () -> Unit, vm: OnboardingViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val pager = rememberPagerState { PAGES.size }
 

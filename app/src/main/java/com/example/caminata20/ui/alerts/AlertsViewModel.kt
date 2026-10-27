@@ -1,20 +1,21 @@
 package com.example.caminata20.ui.alerts
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.caminata20.data.Exercise
-import com.example.caminata20.data.ExerciseCatalog
-import com.example.caminata20.data.PauseType
-import com.example.caminata20.data.SettingsRepository
-import com.example.caminata20.data.SnoozeRepository
-import com.example.caminata20.notifications.PauseActions
+import com.example.caminata20.data.local.ExerciseCatalog
+import com.example.caminata20.domain.model.Exercise
+import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.repository.LocalStateRepository
+import com.example.caminata20.domain.repository.PreferencesRepository
+import com.example.caminata20.domain.usecase.PauseActionsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class AlertsUiState(
     val type: PauseType = PauseType.ESTIRAMIENTO,
@@ -22,18 +23,20 @@ data class AlertsUiState(
     val consecutiveSnoozes: Int = 0,
     val message: String? = null,
 ) {
-    val showStreakWarning get() = consecutiveSnoozes > SnoozeRepository.STREAK_WARNING_AFTER
+    val showStreakWarning get() = consecutiveSnoozes > PauseActionsUseCase.STREAK_WARNING_AFTER
 }
 
 /** HU-03: pantalla Alertas con Completar / Posponer y advertencia de racha. */
-class AlertsViewModel(app: Application) : AndroidViewModel(app) {
-    private val settings = SettingsRepository(app)
-    private val snoozes = SnoozeRepository(app)
-    private val actions = PauseActions(app)
+@HiltViewModel
+class AlertsViewModel @Inject constructor(
+    prefs: PreferencesRepository,
+    local: LocalStateRepository,
+    private val actions: PauseActionsUseCase,
+) : ViewModel() {
     private val message = MutableStateFlow<String?>(null)
 
     val state: StateFlow<AlertsUiState> = combine(
-        settings.pauseSettings, settings.lastExerciseId, snoozes.consecutive, message,
+        prefs.pauseSettings, local.lastExerciseId, local.consecutiveSnoozes, message,
     ) { s, lastId, count, msg ->
         AlertsUiState(
             type = s.type,
@@ -50,6 +53,6 @@ class AlertsViewModel(app: Application) : AndroidViewModel(app) {
 
     fun snooze() = viewModelScope.launch {
         actions.snooze()
-        message.value = "Te avisaremos de nuevo en ${SnoozeRepository.SNOOZE_MINUTES} minutos."
+        message.value = "Te avisaremos de nuevo en ${PauseActionsUseCase.SNOOZE_MINUTES} minutos."
     }
 }

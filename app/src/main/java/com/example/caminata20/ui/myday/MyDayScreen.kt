@@ -24,8 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.caminata20.data.PauseStatus
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.ui.components.BreakeeCard
 import com.example.caminata20.ui.components.ProgressBar
 import com.example.caminata20.ui.components.PrimaryButton
@@ -39,7 +39,7 @@ import java.util.Locale
 
 /** HU-12: Mi Día. */
 @Composable
-fun MyDayScreen(onOpenProfile: () -> Unit, onStartExercise: (String) -> Unit = {}, vm: MyDayViewModel = viewModel()) {
+fun MyDayScreen(onOpenProfile: () -> Unit, onStartExercise: (String) -> Unit = {}, vm: MyDayViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val locale = Locale.forLanguageTag("es-CO")
     val today = SimpleDateFormat("EEEE, d 'de' MMMM", locale).format(Date()).replaceFirstChar { it.titlecase(locale) }

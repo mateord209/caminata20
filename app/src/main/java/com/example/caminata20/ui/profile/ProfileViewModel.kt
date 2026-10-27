@@ -1,29 +1,37 @@
 package com.example.caminata20.ui.profile
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.caminata20.data.ProfileRepository
+import com.example.caminata20.domain.model.Profile
+import com.example.caminata20.domain.repository.AuthRepository
+import com.example.caminata20.domain.repository.ProfileRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class ProfileUiState(
     val name: String = "",
     val email: String = "",
-    val goal: Int = ProfileRepository.DEFAULT_GOAL,
+    val goal: Int = Profile.DEFAULT_GOAL,
     val nameError: String? = null,
     val saved: Boolean = false,
+    val signedOut: Boolean = false,
 ) {
     val initials: String
         get() = name.split(" ").filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
 }
 
-class ProfileViewModel(app: Application) : AndroidViewModel(app) {
-    private val repo = ProfileRepository(app)
+/** HU-12: Mi Perfil. */
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val repo: ProfileRepository,
+    private val auth: AuthRepository,
+) : ViewModel() {
     private val _state = MutableStateFlow(ProfileUiState())
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
 
@@ -38,7 +46,7 @@ class ProfileViewModel(app: Application) : AndroidViewModel(app) {
 
     /** La meta se guarda al instante para que Mi Día actualice la barra sin esperar. */
     fun onGoalChange(v: Int) {
-        _state.update { it.copy(goal = v.coerceIn(ProfileRepository.GOAL_RANGE), saved = false) }
+        _state.update { it.copy(goal = v.coerceIn(Profile.GOAL_RANGE), saved = false) }
         viewModelScope.launch { repo.saveGoal(_state.value.goal) }
     }
 
@@ -49,8 +57,14 @@ class ProfileViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         viewModelScope.launch {
-            repo.save(s.name, s.goal)
+            repo.saveName(s.name)
+            repo.saveGoal(s.goal)
             _state.update { it.copy(saved = true) }
         }
+    }
+
+    fun signOut() {
+        auth.signOut()
+        _state.update { it.copy(signedOut = true) }
     }
 }

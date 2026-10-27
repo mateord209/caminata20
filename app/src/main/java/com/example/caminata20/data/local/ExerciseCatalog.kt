@@ -1,19 +1,7 @@
-package com.example.caminata20.data
+package com.example.caminata20.data.local
 
-/** HU-16: ejercicio del catálogo local. */
-data class Exercise(
-    val id: String,
-    val type: PauseType,
-    val name: String,
-    val area: String,
-    val durationSec: Int,
-    val steps: List<String>,
-    val level: String = "Nivel fácil",
-) {
-    /** Instrucciones resumidas para la notificación. */
-    val instructions: String get() = steps.joinToString(" ")
-    val durationLabel: String get() = if (durationSec < 60) "$durationSec s" else "${durationSec / 60} min"
-}
+import com.example.caminata20.domain.model.Exercise
+import com.example.caminata20.domain.model.PauseType
 
 /** HU-16: catálogo local (12 ejercicios por tipo de pausa, 48 en total). */
 object ExerciseCatalog {

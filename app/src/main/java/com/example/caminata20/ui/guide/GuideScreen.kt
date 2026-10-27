@@ -32,7 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.SecondaryButton
 import com.example.caminata20.ui.components.SelectableChip
@@ -40,7 +40,7 @@ import com.example.caminata20.ui.components.TopBar
 
 /** HU-16: pantalla guía del ejercicio (se abre desde la notificación o desde Mi Día). */
 @Composable
-fun GuideScreen(exerciseId: String?, onBack: () -> Unit, vm: GuideViewModel = viewModel()) {
+fun GuideScreen(exerciseId: String?, onBack: () -> Unit, vm: GuideViewModel = hiltViewModel()) {
     LaunchedEffect(exerciseId) { vm.load(exerciseId) }
     val state by vm.state.collectAsStateWithLifecycle()
     val ex = state.exercise ?: return

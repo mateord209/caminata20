@@ -1,4 +1,4 @@
-package com.example.caminata20.data
+package com.example.caminata20.data.local
 
 import android.content.Context
 import androidx.datastore.core.DataStore

@@ -28,9 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.caminata20.notifications.PauseActions
-import com.example.caminata20.timer.StubPauseTimer
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.caminata20.domain.usecase.PauseActionsUseCase
+import com.example.caminata20.data.system.AlarmPauseScheduler
 import com.example.caminata20.ui.components.BreakeeCard
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.SecondaryButton
@@ -38,7 +38,7 @@ import com.example.caminata20.ui.components.TopBar
 import com.example.caminata20.ui.theme.BreakeeThemeExt
 
 @Composable
-fun AlertsScreen(onConfigure: () -> Unit, vm: AlertsViewModel = viewModel()) {
+fun AlertsScreen(onConfigure: () -> Unit, vm: AlertsViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val status = BreakeeThemeExt.status
     Column(Modifier.fillMaxSize()) {
@@ -57,7 +57,7 @@ fun AlertsScreen(onConfigure: () -> Unit, vm: AlertsViewModel = viewModel()) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.Warning, contentDescription = null)
                         Spacer(Modifier.width(12.dp))
-                        Text(PauseActions.streakWarningText(state.consecutiveSnoozes), style = MaterialTheme.typography.bodyMedium)
+                        Text(PauseActionsUseCase.streakWarningText(state.consecutiveSnoozes), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }
@@ -80,7 +80,7 @@ fun AlertsScreen(onConfigure: () -> Unit, vm: AlertsViewModel = viewModel()) {
             Text("Próximas alertas", style = MaterialTheme.typography.titleLarge)
             // TODO(HU-01/HU-02): listar las alertas programadas por el temporizador de intervalos real.
             BreakeeCard {
-                Text("Cada ${StubPauseTimer.DEFAULT_INTERVAL_MIN} min", style = MaterialTheme.typography.titleMedium)
+                Text("Cada ${AlarmPauseScheduler.DEFAULT_INTERVAL_MIN} min", style = MaterialTheme.typography.titleMedium)
                 Text(
                     "Intervalo provisional. La configuración de intervalos y horario llega con HU-01/HU-02.",
                     style = MaterialTheme.typography.bodySmall,

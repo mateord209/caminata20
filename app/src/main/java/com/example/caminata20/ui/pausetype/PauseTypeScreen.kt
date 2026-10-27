@@ -22,8 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.caminata20.data.PauseType
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.caminata20.domain.model.PauseType
 import com.example.caminata20.ui.components.OptionCard
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.SelectableChip
@@ -38,7 +38,7 @@ fun PauseType.icon(): ImageVector = when (this) {
 
 /** HU-08: selección del tipo de pausa predeterminado. */
 @Composable
-fun PauseTypeScreen(onBack: () -> Unit, vm: PauseTypeViewModel = viewModel()) {
+fun PauseTypeScreen(onBack: () -> Unit, vm: PauseTypeViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Configuración de pausa", onBack = onBack)

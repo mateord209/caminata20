@@ -1,15 +1,16 @@
 package com.example.caminata20.ui.pausetype
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.caminata20.data.PauseType
-import com.example.caminata20.data.SettingsRepository
+import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.repository.PreferencesRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class PauseTypeUiState(
     val selected: PauseType = PauseType.ESTIRAMIENTO,
@@ -17,14 +18,17 @@ data class PauseTypeUiState(
     val saved: Boolean = false,
 )
 
-class PauseTypeViewModel(app: Application) : AndroidViewModel(app) {
-    private val repo = SettingsRepository(app)
+/** HU-08. */
+@HiltViewModel
+class PauseTypeViewModel @Inject constructor(
+    private val prefs: PreferencesRepository,
+) : ViewModel() {
     private val _state = MutableStateFlow(PauseTypeUiState())
     val state: StateFlow<PauseTypeUiState> = _state.asStateFlow()
 
     init {
         viewModelScope.launch {
-            val s = repo.current()
+            val s = prefs.current()
             _state.update { it.copy(selected = s.type, durationMin = s.durationMin) }
         }
     }
@@ -34,7 +38,7 @@ class PauseTypeViewModel(app: Application) : AndroidViewModel(app) {
 
     fun save() {
         viewModelScope.launch {
-            repo.savePauseSettings(_state.value.selected, _state.value.durationMin)
+            prefs.savePauseSettings(_state.value.selected, _state.value.durationMin)
             _state.update { it.copy(saved = true) }
         }
     }

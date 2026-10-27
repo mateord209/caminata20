@@ -1,14 +1,15 @@
 package com.example.caminata20.ui.onboarding
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.caminata20.data.OnboardingRepository
+import com.example.caminata20.domain.repository.LocalStateRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class OnboardingPage(val emoji: String, val title: String, val body: String)
 
@@ -22,8 +23,11 @@ val PAGES = listOf(
     OnboardingPage("📊", "Mira tu progreso", "Fija una meta diaria y sigue tu racha en Mi Día y Estadísticas."),
 )
 
-class OnboardingViewModel(app: Application) : AndroidViewModel(app) {
-    private val repo = OnboardingRepository(app)
+/** HU-20. */
+@HiltViewModel
+class OnboardingViewModel @Inject constructor(
+    private val local: LocalStateRepository,
+) : ViewModel() {
     private val _state = MutableStateFlow(OnboardingUiState())
     val state: StateFlow<OnboardingUiState> = _state.asStateFlow()
 
@@ -36,7 +40,7 @@ class OnboardingViewModel(app: Application) : AndroidViewModel(app) {
     /** Omitir o Comenzar: guarda la bandera y termina. */
     fun finish() {
         viewModelScope.launch {
-            repo.markDone()
+            local.setOnboardingDone()
             _state.update { it.copy(finished = true) }
         }
     }
