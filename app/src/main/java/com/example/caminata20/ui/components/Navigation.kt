@@ -51,13 +51,13 @@ fun BottomNavBar(currentRoute: String?, onSelect: (BreakeeTab) -> Unit, modifier
     }
 }
 
-/** Encabezado con sobrelínea "PAUSAACTIVA" + título grande, y botón atrás opcional. */
+/** Encabezado con sobrelínea con la marca ("BREAKEE") + título grande, y botón atrás opcional. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
     title: String,
     modifier: Modifier = Modifier,
-    overline: String? = "PAUSAACTIVA",
+    overline: String? = "BREAKEE",
     onBack: (() -> Unit)? = null,
     actions: @Composable () -> Unit = {},
 ) {

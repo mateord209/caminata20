@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -32,8 +33,8 @@ fun SplashScreen(onDestination: (SplashDestination) -> Unit, vm: SplashViewModel
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Image(painterResource(R.drawable.logo), contentDescription = null, modifier = Modifier.size(140.dp))
+        Image(painterResource(R.drawable.logo), contentDescription = stringResource(R.string.app_name), modifier = Modifier.size(140.dp))
         Spacer(Modifier.height(16.dp))
-        Text("Pausa Activa", style = MaterialTheme.typography.headlineMedium, color = cs.onBackground)
+        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, color = cs.onBackground)
     }
 }
