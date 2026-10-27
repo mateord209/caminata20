@@ -23,7 +23,6 @@ import com.example.caminata20.domain.repository.ReminderScheduler
 import com.example.caminata20.domain.repository.WalkRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
 class FakeAuthRepository(var result: Outcome<AuthUser> = Outcome.Success(AuthUser("u1", "Ana", "ana@x.com"))) : AuthRepository {
@@ -122,6 +121,3 @@ class FakeNotifications : PauseNotificationGateway {
     override fun dismissPause() { dismissed++ }
     override fun showStreakWarning(consecutive: Int) { warnings += consecutive }
 }
-
-@Suppress("unused")
-fun <T> Flow<List<T>>.size() = map { it.size }
