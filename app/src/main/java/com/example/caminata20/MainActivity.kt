@@ -8,7 +8,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.caminata20.data.migration.LegacyDataMigrator
+import com.example.caminata20.di.ApplicationScope
 import com.example.caminata20.domain.repository.AuthRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import com.example.caminata20.ui.BreakeeApp
 import com.example.caminata20.ui.theme.BreakeeTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,6 +22,8 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject lateinit var auth: AuthRepository
+    @Inject lateinit var migrator: LegacyDataMigrator
+    @Inject @ApplicationScope lateinit var appScope: CoroutineScope
 
     private var deepLink by mutableStateOf<String?>(null)
 
@@ -27,7 +33,12 @@ class MainActivity : ComponentActivity() {
         deepLink = intent.getStringExtra(EXTRA_ROUTE)
         setContent {
             BreakeeTheme {
-                BreakeeApp(deepLink = deepLink, isSignedIn = { auth.currentUserOrNull() != null })
+                BreakeeApp(
+                    deepLink = deepLink,
+                    isSignedIn = { auth.currentUserOrNull() != null },
+                    // Migra SharedPreferences/DataStore → Firestore una vez por usuario
+                    onAuthenticated = { appScope.launch { runCatching { migrator.migrateIfNeeded() } } },
+                )
             }
         }
     }

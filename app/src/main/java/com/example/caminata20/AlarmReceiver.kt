@@ -37,7 +37,7 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    // TODO(limpieza): eliminar cuando todos los usuarios hayan migrado (LegacyDataMigrator).
+    // Respaldo para alarmas programadas antes de LegacyDataMigrator (la migración luego borra esta clave).
     private fun legacyReminder(context: Context): ReminderTime? {
         val prefs = context.getSharedPreferences("reminder_prefs", Context.MODE_PRIVATE)
         val h = prefs.getInt("hour", -1)
