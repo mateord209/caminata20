@@ -24,7 +24,10 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        // RIESGO: todo lo que va en BuildConfig queda dentro del APK (ver docs/SEGURIDAD_GROQ.md).
+        // Si GROQ_PROXY_URL está definido, la app NO usa GROQ_API_KEY y llama al proxy con el ID token de Firebase.
         buildConfigField("String", "GROQ_API_KEY", "\"${localProperties.getProperty("GROQ_API_KEY", "")}\"")
+        buildConfigField("String", "GROQ_PROXY_URL", "\"${localProperties.getProperty("GROQ_PROXY_URL", "")}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

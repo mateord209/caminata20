@@ -17,12 +17,26 @@ import javax.inject.Named
 import javax.inject.Singleton
 
 /** Configuración de Groq. Ver docs/SEGURIDAD_GROQ.md (riesgo de la clave en el APK y proxy). */
-data class GroqConfig(val apiKey: String, val endpoint: String, val model: String = "openai/gpt-oss-120b")
+data class GroqConfig(
+    val apiKey: String,
+    val endpoint: String,
+    val model: String = "openai/gpt-oss-120b",
+    /** Si no está vacío, se usa el proxy (recomendado) y se envía el ID token de Firebase en vez de la clave. */
+    val proxyUrl: String = "",
+) {
+    val usesProxy: Boolean get() = proxyUrl.isNotBlank()
+}
+
+/** Token de identidad del usuario para autenticarse ante el proxy. */
+fun interface IdTokenProvider {
+    suspend fun idToken(): String?
+}
 
 @Singleton
 class GroqExerciseGenerator @Inject constructor(
     private val client: OkHttpClient,
     private val config: GroqConfig,
+    private val tokens: IdTokenProvider,
     @Named("io") private val io: CoroutineDispatcher,
 ) : AiExerciseGenerator {
 
@@ -35,13 +49,14 @@ class GroqExerciseGenerator @Inject constructor(
         }
     }
 
-    private fun call(prompt: String): String {
+    private suspend fun call(prompt: String): String {
         val body = JSONObject()
             .put("model", config.model)
             .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", prompt)))
             .toString().toRequestBody("application/json".toMediaType())
-        val req = Request.Builder().url(config.endpoint)
-            .addHeader("Authorization", "Bearer ${config.apiKey}")
+        val bearer = if (config.usesProxy) tokens.idToken() ?: throw IOException("Sesión expirada") else config.apiKey
+        val req = Request.Builder().url(if (config.usesProxy) config.proxyUrl else config.endpoint)
+            .addHeader("Authorization", "Bearer $bearer")
             .post(body).build()
         client.newCall(req).execute().use { resp ->
             if (!resp.isSuccessful) throw IOException("Error de red: ${resp.code} ${resp.message}")

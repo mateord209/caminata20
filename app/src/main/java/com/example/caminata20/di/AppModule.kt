@@ -4,6 +4,8 @@ import com.example.caminata20.BuildConfig
 import com.example.caminata20.data.local.LocalStateRepositoryImpl
 import com.example.caminata20.data.remote.GroqConfig
 import com.example.caminata20.data.remote.GroqExerciseGenerator
+import com.example.caminata20.data.remote.IdTokenProvider
+import kotlinx.coroutines.tasks.await
 import com.example.caminata20.data.repository.FirebaseAuthRepository
 import com.example.caminata20.data.repository.FirestoreAiRoutineRepository
 import com.example.caminata20.data.repository.FirestorePauseHistoryRepository
@@ -70,7 +72,13 @@ object NetworkModule {
     fun groqConfig(): GroqConfig = GroqConfig(
         apiKey = BuildConfig.GROQ_API_KEY,
         endpoint = "https://api.groq.com/openai/v1/chat/completions",
+        proxyUrl = BuildConfig.GROQ_PROXY_URL,
     )
+
+    @Provides
+    fun idTokens(auth: FirebaseAuth): IdTokenProvider = IdTokenProvider {
+        auth.currentUser?.getIdToken(false)?.await()?.token
+    }
 
     @Provides @Named("io")
     fun io(): CoroutineDispatcher = Dispatchers.IO
