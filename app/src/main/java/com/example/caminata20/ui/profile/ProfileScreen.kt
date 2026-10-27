@@ -1,6 +1,5 @@
 package com.example.caminata20.ui.profile
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,28 +24,28 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import com.example.caminata20.ui.auth.googleSignInClient
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.caminata20.LoginActivity
 import com.example.caminata20.domain.model.Profile
 import com.example.caminata20.ui.components.BreakeeCard
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.Stepper
 import com.example.caminata20.ui.components.TopBar
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
 /** HU-12: Mi Perfil. */
 @Composable
-fun ProfileScreen(onBack: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {
+fun ProfileScreen(onBack: () -> Unit, onSignedOut: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val range = Profile.GOAL_RANGE
+    LaunchedEffect(state.signedOut) { if (state.signedOut) onSignedOut() }
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Mi Perfil", onBack = onBack)
         Column(
@@ -112,12 +111,9 @@ fun ProfileScreen(onBack: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {
                 modifier = Modifier.fillMaxWidth(),
             )
             TextButton(onClick = {
-                GoogleSignIn.getClient(context, GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()).signOut()
+                googleSignInClient(context).signOut()
                 vm.signOut()
-                context.startActivity(
-                    Intent(context, LoginActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                )
-            }, modifier = Modifier.fillMaxWidth()) {
+}, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text("Cerrar sesión")

@@ -15,13 +15,27 @@ import android.os.IBinder
 import android.os.Looper
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.*
-import org.json.JSONArray
-import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.caminata20.domain.model.WalkSession
+import com.example.caminata20.domain.repository.WalkRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import com.example.caminata20.di.ApplicationScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+/** Estado en vivo de la caminata, observado por WalkViewModel. */
+data class WalkLiveState(val isTracking: Boolean = false, val steps: Int = 0, val km: Double = 0.0)
+
+/** Servicio en primer plano (GPS + podómetro). Guarda la sesión en WalkRepository (Firestore offline). */
+@AndroidEntryPoint
 class WalkTrackingService : Service(), SensorEventListener {
+
+    @Inject lateinit var walkRepository: WalkRepository
+    /** Scope de aplicación: la escritura termina aunque el servicio se destruya. */
+    @Inject @ApplicationScope lateinit var scope: CoroutineScope
 
     companion object {
         const val ACTION_START = "com.example.caminata20.action.START_WALK"
@@ -29,9 +43,16 @@ class WalkTrackingService : Service(), SensorEventListener {
         const val CHANNEL_ID = "walk_tracking_channel"
         const val NOTIF_ID = 2001
 
-        @Volatile var isTracking = false
-        @Volatile var steps = 0
-        @Volatile var km = 0.0
+        private val _live = MutableStateFlow(WalkLiveState())
+        val live: StateFlow<WalkLiveState> = _live.asStateFlow()
+        val isTracking get() = _live.value.isTracking
+    }
+
+    private var steps = 0
+    private var km = 0.0
+
+    private fun publish(tracking: Boolean = isTracking) {
+        _live.value = WalkLiveState(tracking, steps, km)
     }
 
     private lateinit var sensorManager: SensorManager
@@ -56,6 +77,7 @@ class WalkTrackingService : Service(), SensorEventListener {
                 if (distance > 5f) {
                     km += distance / 1000.0
                     lastLocation = location
+                    publish()
                     updateNotification()
                 }
             } else {
@@ -80,9 +102,9 @@ class WalkTrackingService : Service(), SensorEventListener {
         }
 
         if (!isTracking) {
-            isTracking = true
             steps = 0
             km = 0.0
+            publish(tracking = true)
             initialSteps = -1
             lastLocation = null
 
@@ -100,6 +122,7 @@ class WalkTrackingService : Service(), SensorEventListener {
         if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
             if (initialSteps < 0) initialSteps = event.values[0].toInt()
             steps = event.values[0].toInt() - initialSteps
+            publish()
             updateNotification()
         }
     }
@@ -108,7 +131,7 @@ class WalkTrackingService : Service(), SensorEventListener {
 
     private fun stopTracking() {
         if (!isTracking) return
-        isTracking = false
+        publish(tracking = false)
         handler.removeCallbacks(timeoutRunnable)
         sensorManager.unregisterListener(this)
         fusedLocationClient.removeLocationUpdates(locationCallback)
@@ -123,26 +146,7 @@ class WalkTrackingService : Service(), SensorEventListener {
     }
 
     private fun saveSession(steps: Int, km: Double) {
-        val prefs = getSharedPreferences("walk_stats", Context.MODE_PRIVATE)
-        val totalSteps = prefs.getInt("total_steps", 0) + steps
-        val totalKm = prefs.getFloat("total_km", 0f) + km.toFloat()
-        val weekKm = prefs.getFloat("week_km", 0f) + km.toFloat()
-
-        val sessionsJson = prefs.getString("sessions", "[]")
-        val sessionsArray = JSONArray(sessionsJson)
-        val newSession = JSONObject()
-        val dateFormat = SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.getDefault())
-        newSession.put("date", dateFormat.format(Date()))
-        newSession.put("steps", steps)
-        newSession.put("km", km)
-        sessionsArray.put(newSession)
-
-        prefs.edit()
-            .putInt("total_steps", totalSteps)
-            .putFloat("total_km", totalKm)
-            .putFloat("week_km", weekKm)
-            .putString("sessions", sessionsArray.toString())
-            .apply()
+        scope.launch { walkRepository.add(WalkSession(System.currentTimeMillis(), steps, km)) }
     }
 
     private fun createChannel() {
@@ -158,7 +162,9 @@ class WalkTrackingService : Service(), SensorEventListener {
     }
 
     private fun buildNotification(): Notification {
-        val openIntent = Intent(this, WalkActivity::class.java)
+        val openIntent = Intent(this, MainActivity::class.java)
+            .putExtra(MainActivity.EXTRA_ROUTE, com.example.caminata20.ui.Routes.WALK)
+            .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val pendingIntent = PendingIntent.getActivity(
             this, 0, openIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

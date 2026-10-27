@@ -10,7 +10,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.example.caminata20.BreakeeActivity
+import com.example.caminata20.MainActivity
 import com.example.caminata20.NotificationHelper
 import com.example.caminata20.data.local.ExerciseCatalog
 import com.example.caminata20.domain.repository.LocalStateRepository
@@ -39,9 +39,9 @@ class PauseNotifier @Inject constructor(
         val exercise = ExerciseCatalog.next(type, local.lastExerciseId.first())
         local.setLastExercise(exercise.id)
 
-        val openGuideIntent = Intent(context, BreakeeActivity::class.java)
-            .putExtra(BreakeeActivity.EXTRA_ROUTE, Routes.guide(exercise.id))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val openGuideIntent = Intent(context, MainActivity::class.java)
+            .putExtra(MainActivity.EXTRA_ROUTE, Routes.guide(exercise.id))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val contentIntent = PendingIntent.getActivity(
             context, 0, openGuideIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
