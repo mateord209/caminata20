@@ -8,33 +8,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Air
-import androidx.compose.material.icons.filled.SelfImprovement
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.caminata20.domain.model.PauseType
 import com.example.caminata20.ui.components.OptionCard
+import com.example.caminata20.ui.components.icon
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.SelectableChip
 import com.example.caminata20.ui.components.TopBar
 
-fun PauseType.icon(): ImageVector = when (this) {
-    PauseType.ESTIRAMIENTO -> Icons.Filled.SelfImprovement
-    PauseType.DESCANSO_VISUAL -> Icons.Filled.Visibility
-    PauseType.RESPIRACION -> Icons.Filled.Air
-    PauseType.HIDRATACION -> Icons.Filled.WaterDrop
-}
 
 /** HU-08: selección del tipo de pausa predeterminado. */
 @Composable
@@ -55,7 +44,7 @@ fun PauseTypeScreen(onBack: () -> Unit, vm: PauseTypeViewModel = hiltViewModel()
                 OptionCard(
                     title = type.notificationTitle,
                     subtitle = type.description,
-                    icon = type.icon(),
+                    icon = type.icon,
                     selected = state.selected == type,
                     onClick = { vm.select(type) },
                 )

@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Route
-import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,13 +31,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.caminata20.ui.Routes
 import com.example.caminata20.ui.components.BreakeeCard
+import com.example.caminata20.ui.components.PauseTypeIcon
 import com.example.caminata20.ui.components.StatCard
 import com.example.caminata20.ui.components.TopBar
 
 private data class HomeAction(val title: String, val subtitle: String, val icon: ImageVector, val route: String)
 
 private val ACTIONS = listOf(
-    HomeAction("Tipo de pausa", "Estiramiento, descanso visual, respiración o hidratación", Icons.Filled.SelfImprovement, Routes.PAUSE_TYPE),
     HomeAction("Iniciar caminata", "Pasos y distancia con GPS", Icons.AutoMirrored.Filled.DirectionsWalk, Routes.WALK),
     HomeAction("Historial de caminatas", "Tus recorridos guardados", Icons.Filled.History, Routes.WALK_HISTORY),
     HomeAction("Ejercicios con IA", "Rutina de estiramientos generada", Icons.Filled.AutoAwesome, Routes.AI),
@@ -64,8 +63,20 @@ fun HomeScreen(onNavigate: (String) -> Unit, vm: HomeViewModel = hiltViewModel()
                 StatCard("%.2f km".format(state.stats.totalKm), "Distancia", Icons.Filled.Route, Modifier.weight(1f))
                 StatCard("%.2f km".format(state.stats.weekKm), "Esta semana", Icons.Filled.DateRange, Modifier.weight(1f))
             }
-            ACTIONS.forEachIndexed { i, a ->
-                BreakeeCard(highlighted = i == 0, onClick = { onNavigate(a.route) }) {
+            // HU-08: ícono y etiqueta salen del estado observado → cambian al instante
+            val pause = state.pauseSettings
+            BreakeeCard(highlighted = true, onClick = { onNavigate(Routes.PAUSE_TYPE) }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PauseTypeIcon(pause.type, modifier = Modifier.padding(end = 16.dp))
+                    Column {
+                        Text("Tipo de pausa", style = MaterialTheme.typography.labelMedium)
+                        Text(pause.type.title, style = MaterialTheme.typography.titleMedium)
+                        Text("${pause.durationMin} min · toca para cambiar", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+            ACTIONS.forEach { a ->
+                BreakeeCard(onClick = { onNavigate(a.route) }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(a.icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 16.dp))
                         Column {

@@ -35,6 +35,10 @@ import com.example.caminata20.ui.reminder.ReminderViewModel
 import com.example.caminata20.ui.splash.SplashDestination
 import com.example.caminata20.ui.splash.SplashViewModel
 import com.example.caminata20.ui.walk.WalkHistoryViewModel
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.WaterDrop
+import com.example.caminata20.ui.components.icon
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -203,13 +207,51 @@ class ViewModelsTest {
     @Test
     fun `inicio calcula totales desde las caminatas`() = runTest {
         val walks = FakeWalkRepository()
-        val vm = HomeViewModel(FakeProfileRepository(), walks)
+        val vm = HomeViewModel(FakeProfileRepository(), walks, FakePreferencesRepository())
         keep(vm.state)
         walks.add(WalkSession(System.currentTimeMillis(), 1000, 0.75))
         walks.add(WalkSession(System.currentTimeMillis(), 500, 0.25))
         assertEquals(1500, vm.state.value.stats.totalSteps)
         assertEquals(1.0, vm.state.value.stats.totalKm, 1e-9)
         assertEquals("Ana", vm.state.value.userName)
+    }
+
+    @Test
+    fun `HU-08 inicio refleja al instante el cambio de tipo de pausa`() = runTest {
+        val prefs = FakePreferencesRepository()
+        val home = HomeViewModel(FakeProfileRepository(), FakeWalkRepository(), prefs)
+        keep(home.state)
+        assertEquals(PauseType.ESTIRAMIENTO, home.state.value.pauseSettings.type)
+
+        // Se cambia desde la pantalla de configuración (otro ViewModel, misma fuente de datos)
+        val config = PauseTypeViewModel(prefs)
+        config.select(PauseType.HIDRATACION); config.setDuration(3); config.save()
+
+        assertEquals(PauseType.HIDRATACION, home.state.value.pauseSettings.type)
+        assertEquals(3, home.state.value.pauseSettings.durationMin)
+        assertEquals(Icons.Filled.WaterDrop, home.state.value.pauseSettings.type.icon)
+        assertEquals("Hidratación", home.state.value.pauseSettings.type.title)
+
+        prefs.savePauseSettings(PauseType.DESCANSO_VISUAL, 1)
+        assertEquals(Icons.Filled.Visibility, home.state.value.pauseSettings.type.icon)
+    }
+
+    @Test
+    fun `HU-08 cada tipo de pausa tiene un icono distinto`() {
+        val icons = PauseType.entries.map { it.icon }
+        assertEquals(PauseType.entries.size, icons.toSet().size)
+    }
+
+    @Test
+    fun `HU-08 alertas y mi dia siguen el tipo de pausa actual`() = runTest {
+        val prefs = FakePreferencesRepository(); val local = FakeLocalState()
+        val useCase = PauseActionsUseCase(prefs, FakePauseHistoryRepository(), local, FakePauseScheduler(), FakeNotifications(), Clock { 0 })
+        val alerts = AlertsViewModel(prefs, local, useCase)
+        val myDay = MyDayViewModel(FakeProfileRepository(), FakePauseHistoryRepository(), prefs, local)
+        keep(alerts.state); keep(myDay.state)
+        prefs.savePauseSettings(PauseType.RESPIRACION, 2)
+        assertEquals(PauseType.RESPIRACION, alerts.state.value.type)
+        assertEquals(PauseType.RESPIRACION, myDay.state.value.suggested!!.type)
     }
 
     @Test

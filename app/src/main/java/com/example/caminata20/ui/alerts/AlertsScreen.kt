@@ -32,6 +32,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
 import com.example.caminata20.data.system.AlarmPauseScheduler
 import com.example.caminata20.ui.components.BreakeeCard
+import com.example.caminata20.ui.components.PauseTypeLabel
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.SecondaryButton
 import com.example.caminata20.ui.components.TopBar
@@ -64,8 +65,9 @@ fun AlertsScreen(onConfigure: () -> Unit, vm: AlertsViewModel = hiltViewModel())
             BreakeeCard {
                 Text("Breakee · ahora", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("¡Hora de tu pausa activa!", style = MaterialTheme.typography.titleLarge)
+                PauseTypeLabel(state.type, modifier = Modifier.padding(top = 8.dp))
                 Text(
-                    "${state.type.emoji} ${state.type.title}: ${state.exercise?.name ?: ""}. ${state.exercise?.instructions ?: ""}",
+                    "${state.exercise?.name ?: ""}. ${state.exercise?.instructions ?: ""}",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )

@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.ui.components.BreakeeCard
+import com.example.caminata20.ui.components.PauseTypeIcon
 import com.example.caminata20.ui.components.ProgressBar
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.StatCard
@@ -73,7 +74,7 @@ fun MyDayScreen(onOpenProfile: () -> Unit, onStartExercise: (String) -> Unit = {
                 Text("Ejercicio sugerido", style = MaterialTheme.typography.titleLarge)
                 BreakeeCard {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(ex.type.emoji, style = MaterialTheme.typography.headlineMedium)
+                        PauseTypeIcon(ex.type)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(ex.name, style = MaterialTheme.typography.titleMedium)
@@ -90,6 +91,8 @@ fun MyDayScreen(onOpenProfile: () -> Unit, onStartExercise: (String) -> Unit = {
             val status = BreakeeThemeExt.status
             state.todayRecords.forEach { r ->
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    PauseTypeIcon(r.type, size = 28.dp)
+                    Spacer(Modifier.width(8.dp))
                     Text("${hourFmt.format(Date(r.timestamp))} · ${r.type.title}", modifier = Modifier.weight(1f))
                     if (r.status == PauseStatus.COMPLETADA) {
                         StatusBadge("✓ Completada", MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer)

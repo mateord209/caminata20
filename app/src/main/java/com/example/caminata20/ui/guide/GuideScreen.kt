@@ -30,9 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.caminata20.ui.components.PauseTypeIcon
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.SecondaryButton
 import com.example.caminata20.ui.components.SelectableChip
@@ -54,7 +54,7 @@ fun GuideScreen(exerciseId: String?, onBack: () -> Unit, vm: GuideViewModel = hi
             Box(
                 Modifier.fillMaxWidth().height(180.dp).background(cs.secondaryContainer, RoundedCornerShape(28.dp)),
                 contentAlignment = Alignment.Center,
-            ) { Text(ex.type.emoji, fontSize = 80.sp) }
+            ) { PauseTypeIcon(ex.type, size = 120.dp, container = cs.secondaryContainer) }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SelectableChip(ex.durationLabel, selected = true, onClick = {})
                 SelectableChip(ex.area, selected = false, onClick = {})
