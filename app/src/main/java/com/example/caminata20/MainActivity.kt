@@ -20,6 +20,7 @@ import com.example.caminata20.domain.repository.AuthRepository
 import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.ui.BreakeeApp
+import com.example.caminata20.ui.theme.AppNightMode
 import com.example.caminata20.ui.theme.BreakeeTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -43,11 +44,17 @@ class MainActivity : ComponentActivity() {
         deepLink = intent.getStringExtra(EXTRA_ROUTE)
         setContent {
             // HU-13: la apariencia se lee de DataStore local (funciona sin sesión).
-            val apariencia by local.apariencia.collectAsStateWithLifecycle(initialValue = AparienciaApp())
+            // null evita aplicar el tema por defecto antes de que DataStore emita el valor real.
+            val aparienciaState by local.apariencia.collectAsStateWithLifecycle(initialValue = null)
+            val apariencia = aparienciaState ?: AparienciaApp()
             val dark = when (apariencia.tema) {
                 TemaApp.CLARO -> false
                 TemaApp.OSCURO -> true
                 TemaApp.SISTEMA -> isSystemInDarkTheme()
+            }
+            // HU-13: avisa a Android del tema elegido para que el splash use values-night.
+            LaunchedEffect(aparienciaState?.tema) {
+                aparienciaState?.let { AppNightMode.apply(applicationContext, it.tema) }
             }
             LaunchedEffect(dark) {
                 val controller = WindowCompat.getInsetsController(window, window.decorView)
