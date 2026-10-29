@@ -12,6 +12,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isUnspecified
 
 private val LightColors = lightColorScheme(
     primary = BreakeeLight.primary, onPrimary = BreakeeLight.onPrimary,
@@ -54,8 +55,35 @@ val BreakeeShapes = Shapes(
     large = RoundedCornerShape(24.dp),
 )
 
+private fun scaledTypography(scale: Float): androidx.compose.material3.Typography {
+    if (scale == 1f) return BreakeeTypography
+    fun androidx.compose.ui.text.TextStyle.scaled() = copy(
+        fontSize = if (fontSize.isUnspecified) fontSize else fontSize * scale,
+        lineHeight = if (lineHeight.isUnspecified) lineHeight else lineHeight * scale,
+    )
+    return BreakeeTypography.copy(
+        displayLarge = BreakeeTypography.displayLarge.scaled(),
+        displaySmall = BreakeeTypography.displaySmall.scaled(),
+        headlineMedium = BreakeeTypography.headlineMedium.scaled(),
+        headlineSmall = BreakeeTypography.headlineSmall.scaled(),
+        titleLarge = BreakeeTypography.titleLarge.scaled(),
+        titleMedium = BreakeeTypography.titleMedium.scaled(),
+        titleSmall = BreakeeTypography.titleSmall.scaled(),
+        bodyLarge = BreakeeTypography.bodyLarge.scaled(),
+        bodyMedium = BreakeeTypography.bodyMedium.scaled(),
+        bodySmall = BreakeeTypography.bodySmall.scaled(),
+        labelLarge = BreakeeTypography.labelLarge.scaled(),
+        labelMedium = BreakeeTypography.labelMedium.scaled(),
+        labelSmall = BreakeeTypography.labelSmall.scaled(),
+    )
+}
+
 @Composable
-fun BreakeeTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+fun BreakeeTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    textScale: Float = 1f,
+    content: @Composable () -> Unit,
+) {
     val status = if (darkTheme) {
         BreakeeStatusColors(BreakeeDark.success, BreakeeDark.successContainer, BreakeeDark.warning, BreakeeDark.warningContainer)
     } else {
@@ -64,7 +92,7 @@ fun BreakeeTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composabl
     CompositionLocalProvider(LocalStatusColors provides status) {
         MaterialTheme(
             colorScheme = if (darkTheme) DarkColors else LightColors,
-            typography = BreakeeTypography,
+            typography = scaledTypography(textScale),
             shapes = BreakeeShapes,
             content = content,
         )

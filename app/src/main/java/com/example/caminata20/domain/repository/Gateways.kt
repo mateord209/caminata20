@@ -1,15 +1,17 @@
 package com.example.caminata20.domain.repository
 
+import com.example.caminata20.domain.model.ConfigHidratacion
+import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.ReminderTime
 
-/**
- * Temporizador de intervalos de pausas.
- * TODO(HU-01/HU-02): el temporizador real (intervalo y horario laboral configurables) lo
- * implementa otro integrante; aquí solo está lo que necesita HU-03 (reiniciar / posponer).
- */
+/** Temporizador de intervalos de pausas (HU-01, HU-02, HU-06, HU-14). */
 interface PauseScheduler {
     fun restart()
     fun scheduleIn(minutes: Int)
+    fun cancel()
+    fun applySchedule(config: ReminderScheduleConfig, meetingUntil: Long? = null)
+    fun scheduleHydration(config: ConfigHidratacion)
+    fun cancelHydration()
 }
 
 /** Recordatorio diario a hora fija (pantalla Recordatorio). */

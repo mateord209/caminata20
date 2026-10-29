@@ -4,10 +4,12 @@ import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
 import com.example.caminata20.domain.usecase.Clock
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
+import com.example.caminata20.domain.usecase.PauseScheduleSync
 import com.example.caminata20.fakes.FakeLocalState
 import com.example.caminata20.fakes.FakeNotifications
 import com.example.caminata20.fakes.FakePauseHistoryRepository
 import com.example.caminata20.fakes.FakePauseScheduler
+import com.example.caminata20.fakes.FakeReminderScheduler
 import com.example.caminata20.fakes.FakePreferencesRepository
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -21,7 +23,8 @@ class PauseActionsUseCaseTest {
     private val local = FakeLocalState()
     private val scheduler = FakePauseScheduler()
     private val notifications = FakeNotifications()
-    private val useCase = PauseActionsUseCase(prefs, history, local, scheduler, notifications, Clock { 1_000L })
+    private val sync = PauseScheduleSync(prefs, local, scheduler, FakeReminderScheduler())
+    private val useCase = PauseActionsUseCase(prefs, history, local, scheduler, sync, notifications, Clock { 1_000L })
 
     @Test
     fun `completar registra la pausa con fecha, reinicia contador y temporizador`() = runTest {

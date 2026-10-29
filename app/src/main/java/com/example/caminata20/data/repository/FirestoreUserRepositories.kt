@@ -5,10 +5,14 @@ import com.example.caminata20.data.remote.UserPaths
 import com.example.caminata20.data.remote.observe
 import com.example.caminata20.domain.model.AiRoutine
 import com.example.caminata20.domain.model.PauseRecord
+import com.example.caminata20.domain.model.AparienciaApp
+import com.example.caminata20.domain.model.ConfigHidratacion
 import com.example.caminata20.domain.model.PauseSettings
 import com.example.caminata20.domain.model.PauseType
 import com.example.caminata20.domain.model.Profile
+import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.ReminderTime
+import com.example.caminata20.domain.model.ScheduleProfilesState
 import com.example.caminata20.domain.model.WalkSession
 import com.example.caminata20.domain.repository.AiRoutineRepository
 import com.example.caminata20.domain.repository.AuthRepository
@@ -82,6 +86,43 @@ class FirestorePreferencesRepository @Inject constructor(
         paths.preferences(uid).set(
             mapOf("reminderHour" to (time?.hour ?: -1), "reminderMinute" to (time?.minute ?: 0)), SetOptions.merge(),
         )
+    }
+
+    override val reminderSchedule: Flow<ReminderScheduleConfig> = doc.map { FirestoreMappers.reminderSchedule(it) }
+    override suspend fun currentSchedule(): ReminderScheduleConfig = reminderSchedule.first()
+
+    override suspend fun saveReminderSchedule(config: ReminderScheduleConfig) {
+        local.cacheReminderSchedule(config)
+        val uid = paths.uid() ?: return
+        paths.preferences(uid).set(FirestoreMappers.reminderScheduleToMap(config), SetOptions.merge())
+    }
+
+    override val scheduleProfiles: Flow<ScheduleProfilesState> = doc.map { FirestoreMappers.scheduleProfiles(it) }
+
+    override suspend fun saveScheduleProfiles(state: ScheduleProfilesState) {
+        val uid = paths.uid() ?: return
+        paths.preferences(uid).set(FirestoreMappers.scheduleProfilesToMap(state), SetOptions.merge())
+    }
+
+    override suspend fun activateScheduleProfile(indice: Int) {
+        val actual = scheduleProfiles.first().copy(indiceActivo = indice.coerceIn(0, 1))
+        saveScheduleProfiles(actual)
+        saveReminderSchedule(actual.activo.toSchedule())
+    }
+
+    override val apariencia: Flow<AparienciaApp> = doc.map { FirestoreMappers.apariencia(it) }
+
+    override suspend fun saveApariencia(apariencia: AparienciaApp) {
+        val uid = paths.uid() ?: return
+        paths.preferences(uid).set(FirestoreMappers.aparienciaToMap(apariencia), SetOptions.merge())
+    }
+
+    override val hidratacion: Flow<ConfigHidratacion> = doc.map { FirestoreMappers.hidratacion(it) }
+
+    override suspend fun saveHidratacion(config: ConfigHidratacion) {
+        local.cacheHidratacion(config)
+        val uid = paths.uid() ?: return
+        paths.preferences(uid).set(FirestoreMappers.hidratacionToMap(config), SetOptions.merge())
     }
 }
 

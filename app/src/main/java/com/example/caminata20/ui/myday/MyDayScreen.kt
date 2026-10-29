@@ -69,6 +69,7 @@ fun MyDayScreen(onOpenProfile: () -> Unit, onStartExercise: (String) -> Unit = {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StatCard("${state.totalMinutes} min", "Tiempo total", Icons.Filled.Timer, Modifier.weight(1f))
                 StatCard("${state.percent}%", "Meta de hoy", Icons.Filled.EmojiEvents, Modifier.weight(1f))
+                StatCard("${state.streak}", "Racha", Icons.Filled.EmojiEvents, Modifier.weight(1f))
             }
             state.suggested?.let { ex ->
                 Text("Ejercicio sugerido", style = MaterialTheme.typography.titleLarge)

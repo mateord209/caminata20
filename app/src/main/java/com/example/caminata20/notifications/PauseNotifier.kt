@@ -31,6 +31,22 @@ class PauseNotifier @Inject constructor(
     private val local: LocalStateRepository,
 ) : PauseNotificationGateway {
 
+    /** HU-14: recordatorio de hidratación independiente del tipo de pausa. */
+    suspend fun showHydration() {
+        NotificationHelper.createChannel(context)
+        val n = NotificationCompat.Builder(context, NotificationHelper.CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("💧 Hora de hidratarte")
+            .setContentText("Toma un vaso de agua para mantener tu energía.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText("Beber agua regularmente mejora tu concentración y bienestar."))
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setVibrate(longArrayOf(0, 400, 150, 400))
+            .setAutoCancel(true)
+            .build()
+        notify(n, HYDRATION_NOTIFICATION_ID)
+    }
+
     suspend fun show() {
         NotificationHelper.createChannel(context)
         val settings = prefs.current()
@@ -102,5 +118,6 @@ class PauseNotifier @Inject constructor(
     companion object {
         const val NOTIFICATION_ID = 1001
         const val WARNING_ID = 1002
+        const val HYDRATION_NOTIFICATION_ID = 1003
     }
 }

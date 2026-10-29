@@ -26,7 +26,9 @@ import com.example.caminata20.ui.myday.MyDayScreen
 import com.example.caminata20.ui.onboarding.OnboardingScreen
 import com.example.caminata20.ui.pausetype.PauseTypeScreen
 import com.example.caminata20.ui.profile.ProfileScreen
+import com.example.caminata20.ui.permissions.PermissionsScreen
 import com.example.caminata20.ui.reminder.ReminderScreen
+import com.example.caminata20.ui.settings.SettingsScreen
 import com.example.caminata20.ui.splash.SplashDestination
 import com.example.caminata20.ui.splash.SplashScreen
 import com.example.caminata20.ui.stats.StatsScreen
@@ -47,6 +49,8 @@ object Routes {
     const val AI = "ia"
     const val AI_HISTORY = "ia_historial"
     const val REMINDER = "recordatorio"
+    const val SETTINGS = "ajustes"
+    const val PERMISSIONS = "permisos"
     const val GUIDE = "guia/{exerciseId}"
     fun guide(exerciseId: String) = "guia/$exerciseId"
 }
@@ -112,7 +116,6 @@ fun BreakeeApp(deepLink: String? = null, isSignedIn: () -> Boolean, onAuthentica
             composable(BreakeeTab.MI_DIA.route) {
                 MyDayScreen(onOpenProfile = { nav.navigate(Routes.PROFILE) }, onStartExercise = { nav.navigate(Routes.guide(it)) })
             }
-            // TODO(HU-04): estadísticas e historial completo (otro integrante).
             composable(BreakeeTab.ESTADISTICAS.route) { StatsScreen(title = "Estadísticas") }
 
             composable(Routes.GUIDE) { entry ->
@@ -125,6 +128,10 @@ fun BreakeeApp(deepLink: String? = null, isSignedIn: () -> Boolean, onAuthentica
             composable(Routes.AI) { AiExercisesScreen(onBack = { nav.popBackStack() }, onFinished = { nav.popBackStack() }) }
             composable(Routes.AI_HISTORY) { AiHistoryScreen(onBack = { nav.popBackStack() }) }
             composable(Routes.REMINDER) { ReminderScreen(onBack = { nav.popBackStack() }) }
+            composable(Routes.SETTINGS) { SettingsScreen(onBack = { nav.popBackStack() }) }
+            composable(Routes.PERMISSIONS) {
+                PermissionsScreen(onBack = { nav.popBackStack() }, onDone = { nav.popBackStack() })
+            }
         }
     }
 }
