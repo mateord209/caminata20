@@ -174,7 +174,7 @@ class ViewModelsTest {
     @Test
     fun `perfil valida nombre, limita la meta y cierra sesion`() = runTest {
         val repo = FakeProfileRepository(); val auth = FakeAuthRepository()
-        val vm = ProfileViewModel(repo, auth, FakeLocalState())
+        val vm = ProfileViewModel(repo, auth)
         vm.onNameChange("  "); vm.save()
         assertEquals("El nombre no puede estar vacío", vm.state.value.nameError)
         vm.onGoalChange(40)
@@ -427,7 +427,7 @@ class ViewModelsTest {
 
     // ---------- HU-13 / HU-19 (Apariencia) ----------
     @Test
-    fun `HU-13 el tema no se persiste hasta guardar`() = runTest {
+    fun `HU-13 cambiar tema persiste de inmediato en local`() = runTest {
         val prefs = FakePreferencesRepository(); val local = FakeLocalState()
         val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
         val vm = SettingsViewModel(prefs, local, sync)
@@ -437,69 +437,13 @@ class ViewModelsTest {
         advanceUntilIdle()
 
         assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
-        assertEquals(TemaApp.SISTEMA, local.aparienciaState.value.tema)
-        assertEquals(TemaApp.SISTEMA, prefs.aparienciaState.value.tema)
-        assertFalse(vm.state.value.saved)
-
-        vm.save()
-        advanceUntilIdle()
         assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
         assertEquals(TemaApp.OSCURO, prefs.aparienciaState.value.tema)
+        assertFalse(vm.state.value.saved) // no se llamó save()
     }
 
     @Test
-    fun `HU-13 el perfil aplica el modo oscuro al guardar`() = runTest {
-        val local = FakeLocalState()
-        val vm = ProfileViewModel(FakeProfileRepository(), FakeAuthRepository(), local)
-        advanceUntilIdle()
-
-        vm.setDarkMode(true)
-        advanceUntilIdle()
-        assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
-        assertEquals(TemaApp.SISTEMA, local.aparienciaState.value.tema)
-
-        vm.save()
-        advanceUntilIdle()
-        assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
-
-        vm.setDarkMode(false)
-        advanceUntilIdle()
-        assertEquals(TemaApp.CLARO, vm.state.value.apariencia.tema)
-        assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
-
-        vm.save()
-        advanceUntilIdle()
-        assertEquals(TemaApp.CLARO, local.aparienciaState.value.tema)
-    }
-
-    @Test
-    fun `HU-13 interruptor de modo oscuro cambia al guardar`() = runTest {
-        val prefs = FakePreferencesRepository(); val local = FakeLocalState()
-        val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
-        val vm = SettingsViewModel(prefs, local, sync)
-        advanceUntilIdle()
-
-        vm.setDarkMode(true)
-        advanceUntilIdle()
-        assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
-        assertEquals(TemaApp.SISTEMA, local.aparienciaState.value.tema)
-
-        vm.save()
-        advanceUntilIdle()
-        assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
-
-        vm.setDarkMode(false)
-        advanceUntilIdle()
-        assertEquals(TemaApp.CLARO, vm.state.value.apariencia.tema)
-        assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
-
-        vm.save()
-        advanceUntilIdle()
-        assertEquals(TemaApp.CLARO, local.aparienciaState.value.tema)
-    }
-
-    @Test
-    fun `HU-13 la escala de texto no se persiste hasta guardar`() = runTest {
+    fun `HU-13 cambiar escala de texto persiste de inmediato en local`() = runTest {
         val prefs = FakePreferencesRepository(); val local = FakeLocalState()
         val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
         val vm = SettingsViewModel(prefs, local, sync)
@@ -509,12 +453,8 @@ class ViewModelsTest {
         advanceUntilIdle()
 
         assertEquals(EscalaTexto.EXTRA_GRANDE, vm.state.value.apariencia.escalaTexto)
-        assertEquals(EscalaTexto.NORMAL, local.aparienciaState.value.escalaTexto)
-        assertFalse(vm.state.value.saved)
-
-        vm.save()
-        advanceUntilIdle()
         assertEquals(EscalaTexto.EXTRA_GRANDE, local.aparienciaState.value.escalaTexto)
+        assertFalse(vm.state.value.saved)
     }
 
     @Test

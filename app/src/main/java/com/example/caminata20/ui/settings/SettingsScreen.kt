@@ -27,7 +27,6 @@ import com.example.caminata20.domain.model.EscalaTexto
 import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.TemaApp
 import com.example.caminata20.ui.components.BreakeeCard
-import com.example.caminata20.ui.components.DarkModeToggle
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.SecondaryButton
 import com.example.caminata20.ui.components.SelectableChip
@@ -132,21 +131,23 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
             Text("Apariencia", style = MaterialTheme.typography.titleLarge)
             BreakeeCard {
                 Text(
-                    "El tema y el tamaño del texto se aplican al guardar.",
+                    "El tema y el tamaño del texto se aplican al instante.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                DarkModeToggle(
-                    tema = state.apariencia.tema,
-                    onToggle = vm::setDarkMode,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-                SelectableChip(
-                    label = "Seguir el tema del sistema",
-                    selected = state.apariencia.tema == TemaApp.SISTEMA,
-                    onClick = { vm.setTheme(TemaApp.SISTEMA) },
-                    modifier = Modifier.padding(top = 4.dp),
-                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                    TemaApp.entries.forEach { tema ->
+                        SelectableChip(
+                            when (tema) {
+                                TemaApp.CLARO -> "Claro"
+                                TemaApp.OSCURO -> "Oscuro"
+                                TemaApp.SISTEMA -> "Sistema"
+                            },
+                            selected = state.apariencia.tema == tema,
+                            onClick = { vm.setTheme(tema) },
+                        )
+                    }
+                }
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),

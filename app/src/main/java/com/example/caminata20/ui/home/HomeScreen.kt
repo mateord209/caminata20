@@ -44,7 +44,7 @@ private val ACTIONS = listOf(
     HomeAction("Ejercicios con IA", "Rutina de estiramientos generada", Icons.Filled.AutoAwesome, Routes.AI),
     HomeAction("Historial de rutinas IA", "Rutinas completadas", Icons.AutoMirrored.Filled.ListAlt, Routes.AI_HISTORY),
     HomeAction("Recordatorio diario", "Aviso a una hora fija", Icons.Filled.Alarm, Routes.REMINDER),
-    HomeAction("Ajustes", "Intervalos, apariencia, perfiles e hidratación", Icons.Filled.Settings, Routes.SETTINGS),
+    HomeAction("Ajustes de alertas", "Intervalos, perfiles e hidratación", Icons.Filled.Settings, Routes.SETTINGS),
     HomeAction("Permisos", "Notificaciones y alarmas exactas", Icons.Filled.Alarm, Routes.PERMISSIONS),
 )
 
