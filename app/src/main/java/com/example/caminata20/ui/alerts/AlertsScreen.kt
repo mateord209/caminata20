@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
-import com.example.caminata20.data.system.AlarmPauseScheduler
+import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.ui.components.BreakeeCard
 import com.example.caminata20.ui.components.PauseTypeLabel
 import com.example.caminata20.ui.components.PrimaryButton
@@ -80,14 +80,13 @@ fun AlertsScreen(onConfigure: () -> Unit, vm: AlertsViewModel = hiltViewModel())
                 }
             }
             Text("Próximas alertas", style = MaterialTheme.typography.titleLarge)
-            // TODO(HU-01/HU-02): listar las alertas programadas por el temporizador de intervalos real.
             BreakeeCard {
-                Text("Cada ${AlarmPauseScheduler.DEFAULT_INTERVAL_MIN} min", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    "Intervalo provisional. La configuración de intervalos y horario llega con HU-01/HU-02.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Text("Cada ${state.schedule.intervalMin} min", style = MaterialTheme.typography.titleMedium)
+                val dias = state.schedule.activeDays.sorted().joinToString(", ") { ReminderScheduleConfig.nombreDia(it) }
+                Text("Días activos: $dias", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (state.meetingActive) {
+                    Text("Modo reunión: alertas pausadas temporalmente.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                }
             }
         }
     }

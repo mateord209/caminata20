@@ -28,6 +28,9 @@ class FirestoreMappersTest {
         assertEquals(3, s.durationMin)
         assertNull(FirestoreMappers.reminder(mapOf("reminderHour" to -1L)))
         assertEquals("07:05", FirestoreMappers.reminder(mapOf("reminderHour" to 7L, "reminderMinute" to 5L))!!.label)
+        val schedule = FirestoreMappers.reminderSchedule(mapOf("intervalMin" to 45L, "activeDaysMask" to 31L))
+        assertEquals(45, schedule.intervalMin)
+        assertEquals(5, schedule.activeDays.size)
     }
 
     @Test

@@ -17,6 +17,7 @@ class PauseActionsUseCase @Inject constructor(
     private val history: PauseHistoryRepository,
     private val local: LocalStateRepository,
     private val scheduler: PauseScheduler,
+    private val scheduleSync: PauseScheduleSync,
     private val notifications: PauseNotificationGateway,
     private val clock: Clock,
 ) {
@@ -30,7 +31,7 @@ class PauseActionsUseCase @Inject constructor(
     suspend fun complete() {
         history.add(record(PauseStatus.COMPLETADA))
         local.resetSnoozes()
-        scheduler.restart()
+        scheduleSync.syncPauseTimers()
         notifications.dismissPause()
     }
 

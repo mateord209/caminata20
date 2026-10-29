@@ -2,13 +2,17 @@ package com.example.caminata20.fakes
 
 import com.example.caminata20.domain.model.AiExercise
 import com.example.caminata20.domain.model.AiRoutine
+import com.example.caminata20.domain.model.AparienciaApp
 import com.example.caminata20.domain.model.AuthUser
+import com.example.caminata20.domain.model.ConfigHidratacion
 import com.example.caminata20.domain.model.Outcome
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseSettings
 import com.example.caminata20.domain.model.PauseType
 import com.example.caminata20.domain.model.Profile
+import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.ReminderTime
+import com.example.caminata20.domain.model.ScheduleProfilesState
 import com.example.caminata20.domain.model.WalkSession
 import com.example.caminata20.domain.repository.AiExerciseGenerator
 import com.example.caminata20.domain.repository.AiRoutineRepository
@@ -55,6 +59,27 @@ class FakePreferencesRepository : PreferencesRepository {
     override suspend fun savePauseSettings(type: PauseType, durationMin: Int) { settings.value = PauseSettings(type, durationMin) }
     override val reminder: Flow<ReminderTime?> = reminderState
     override suspend fun saveReminder(time: ReminderTime?) { reminderState.value = time }
+
+    val scheduleState = MutableStateFlow(ReminderScheduleConfig())
+    override val reminderSchedule: Flow<ReminderScheduleConfig> = scheduleState
+    override suspend fun currentSchedule() = scheduleState.value
+    override suspend fun saveReminderSchedule(config: ReminderScheduleConfig) { scheduleState.value = config }
+
+    val profilesState = MutableStateFlow(ScheduleProfilesState())
+    override val scheduleProfiles: Flow<ScheduleProfilesState> = profilesState
+    override suspend fun saveScheduleProfiles(state: ScheduleProfilesState) { profilesState.value = state }
+    override suspend fun activateScheduleProfile(indice: Int) {
+        profilesState.update { it.copy(indiceActivo = indice.coerceIn(0, 1)) }
+        scheduleState.value = profilesState.value.activo.toSchedule()
+    }
+
+    val aparienciaState = MutableStateFlow(AparienciaApp())
+    override val apariencia: Flow<AparienciaApp> = aparienciaState
+    override suspend fun saveApariencia(apariencia: AparienciaApp) { aparienciaState.value = apariencia }
+
+    val hidratacionState = MutableStateFlow(ConfigHidratacion())
+    override val hidratacion: Flow<ConfigHidratacion> = hidratacionState
+    override suspend fun saveHidratacion(config: ConfigHidratacion) { hidratacionState.value = config }
 }
 
 class FakePauseHistoryRepository : PauseHistoryRepository {
@@ -99,6 +124,25 @@ class FakeLocalState : LocalStateRepository {
     override suspend fun setMigrated(uid: String) { migrated += uid }
     override suspend fun cachedReminder() = reminder
     override suspend fun cacheReminder(time: ReminderTime?) { reminder = time }
+
+    private var schedule: ReminderScheduleConfig? = null
+    override suspend fun cachedReminderSchedule() = schedule
+    override suspend fun cacheReminderSchedule(config: ReminderScheduleConfig) { schedule = config }
+
+    val meeting = MutableStateFlow<Long?>(null)
+    override val meetingUntil: Flow<Long?> = meeting
+    override suspend fun setMeetingUntil(until: Long?) { meeting.value = until }
+
+    private var hidratacion: ConfigHidratacion? = null
+    override suspend fun cachedHidratacion() = hidratacion
+    override suspend fun cacheHidratacion(config: ConfigHidratacion) { hidratacion = config }
+
+    val phraseIndex = MutableStateFlow<Int?>(null)
+    override val lastPhraseIndex: Flow<Int?> = phraseIndex
+    override suspend fun setLastPhraseIndex(index: Int) { phraseIndex.value = index }
+    private var phraseAt: Long? = null
+    override suspend fun lastPhraseAt() = phraseAt
+    override suspend fun setLastPhraseAt(at: Long) { phraseAt = at }
 }
 
 class FakePauseScheduler : PauseScheduler {
@@ -106,6 +150,10 @@ class FakePauseScheduler : PauseScheduler {
     val scheduled = mutableListOf<Int>()
     override fun restart() { restarts++ }
     override fun scheduleIn(minutes: Int) { scheduled += minutes }
+    override fun cancel() {}
+    override fun applySchedule(config: ReminderScheduleConfig, meetingUntil: Long?) { restarts++ }
+    override fun scheduleHydration(config: ConfigHidratacion) {}
+    override fun cancelHydration() {}
 }
 
 class FakeReminderScheduler : ReminderScheduler {

@@ -6,8 +6,15 @@ import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseSettings
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.model.AparienciaApp
+import com.example.caminata20.domain.model.ConfigHidratacion
+import com.example.caminata20.domain.model.EscalaTexto
 import com.example.caminata20.domain.model.Profile
+import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.ReminderTime
+import com.example.caminata20.domain.model.ScheduleProfile
+import com.example.caminata20.domain.model.ScheduleProfilesState
+import com.example.caminata20.domain.model.TemaApp
 import com.example.caminata20.domain.model.WalkSession
 
 /** Conversión documento Firestore (Map) <-> modelo de dominio. Funciones puras para poder testearlas. */
@@ -28,6 +35,69 @@ object FirestoreMappers {
         if (h < 0) return null
         return ReminderTime(h, (data["reminderMinute"] as? Number)?.toInt() ?: 0)
     }
+
+    fun reminderSchedule(data: Map<String, Any?>?): ReminderScheduleConfig {
+        val interval = (data?.get("intervalMin") as? Number)?.toInt() ?: ReminderScheduleConfig.DEFAULT_INTERVAL
+        val mask = (data?.get("activeDaysMask") as? Number)?.toInt() ?: ReminderScheduleConfig.defaultDaysMask()
+        return ReminderScheduleConfig(
+            interval.coerceIn(ReminderScheduleConfig.MIN_INTERVAL, 240),
+            ReminderScheduleConfig.maskToDays(mask),
+        )
+    }
+
+    fun reminderScheduleToMap(config: ReminderScheduleConfig): Map<String, Any> = mapOf(
+        "intervalMin" to config.intervalMin,
+        "activeDaysMask" to ReminderScheduleConfig.daysToMask(config.activeDays),
+    )
+
+    private fun scheduleProfile(data: Map<String, Any?>?, prefix: String, defaultName: String): ScheduleProfile {
+        val name = (data?.get("${prefix}Name") as? String)?.takeIf { it.isNotBlank() } ?: defaultName
+        val interval = (data?.get("${prefix}Interval") as? Number)?.toInt() ?: ReminderScheduleConfig.DEFAULT_INTERVAL
+        val mask = (data?.get("${prefix}DaysMask") as? Number)?.toInt() ?: ReminderScheduleConfig.defaultDaysMask()
+        return ScheduleProfile(name, interval, ReminderScheduleConfig.maskToDays(mask))
+    }
+
+    fun scheduleProfiles(data: Map<String, Any?>?): ScheduleProfilesState {
+        val idx = (data?.get("scheduleProfileActive") as? Number)?.toInt()?.coerceIn(0, 1) ?: 0
+        return ScheduleProfilesState(
+            scheduleProfile(data, "profile1", "Perfil 1"),
+            scheduleProfile(data, "profile2", "Perfil 2"),
+            idx,
+        )
+    }
+
+    fun scheduleProfilesToMap(state: ScheduleProfilesState): Map<String, Any> {
+        fun profileMap(prefix: String, profile: ScheduleProfile) = mapOf(
+            "${prefix}Name" to profile.nombre,
+            "${prefix}Interval" to profile.intervalMin,
+            "${prefix}DaysMask" to ReminderScheduleConfig.daysToMask(profile.activeDays),
+        )
+        return profileMap("profile1", state.perfil1) + profileMap("profile2", state.perfil2) +
+            mapOf("scheduleProfileActive" to state.indiceActivo)
+    }
+
+    fun apariencia(data: Map<String, Any?>?): AparienciaApp {
+        val tema = runCatching { TemaApp.valueOf(data?.get("temaApp") as? String ?: TemaApp.SISTEMA.name) }
+            .getOrDefault(TemaApp.SISTEMA)
+        val escala = runCatching { EscalaTexto.valueOf(data?.get("escalaTexto") as? String ?: EscalaTexto.NORMAL.name) }
+            .getOrDefault(EscalaTexto.NORMAL)
+        return AparienciaApp(tema, escala)
+    }
+
+    fun aparienciaToMap(apariencia: AparienciaApp): Map<String, Any> = mapOf(
+        "temaApp" to apariencia.tema.name,
+        "escalaTexto" to apariencia.escalaTexto.name,
+    )
+
+    fun hidratacion(data: Map<String, Any?>?): ConfigHidratacion = ConfigHidratacion(
+        activo = data?.get("hydrationActive") as? Boolean ?: false,
+        intervaloMin = (data?.get("hydrationIntervalMin") as? Number)?.toInt() ?: 60,
+    )
+
+    fun hidratacionToMap(config: ConfigHidratacion): Map<String, Any> = mapOf(
+        "hydrationActive" to config.activo,
+        "hydrationIntervalMin" to config.intervaloMin,
+    )
 
     fun pauseRecordToMap(r: PauseRecord): Map<String, Any> =
         mapOf("timestamp" to r.timestamp, "type" to r.type.name, "status" to r.status.name, "exerciseName" to r.exerciseName)

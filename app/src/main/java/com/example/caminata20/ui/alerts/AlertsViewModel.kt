@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.caminata20.data.local.ExerciseCatalog
 import com.example.caminata20.domain.model.Exercise
 import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
@@ -21,6 +22,8 @@ data class AlertsUiState(
     val type: PauseType = PauseType.ESTIRAMIENTO,
     val exercise: Exercise? = null,
     val consecutiveSnoozes: Int = 0,
+    val schedule: ReminderScheduleConfig = ReminderScheduleConfig(),
+    val meetingActive: Boolean = false,
     val message: String? = null,
 ) {
     val showStreakWarning get() = consecutiveSnoozes > PauseActionsUseCase.STREAK_WARNING_AFTER
@@ -36,12 +39,19 @@ class AlertsViewModel @Inject constructor(
     private val message = MutableStateFlow<String?>(null)
 
     val state: StateFlow<AlertsUiState> = combine(
-        prefs.pauseSettings, local.lastExerciseId, local.consecutiveSnoozes, message,
-    ) { s, lastId, count, msg ->
+        combine(prefs.pauseSettings, prefs.reminderSchedule) { s, schedule -> s to schedule },
+        local.lastExerciseId,
+        local.consecutiveSnoozes,
+        local.meetingUntil,
+        message,
+    ) { settingsPair, lastId, count, meetingUntil, msg ->
+        val (s, schedule) = settingsPair
         AlertsUiState(
             type = s.type,
             exercise = ExerciseCatalog.byId(lastId)?.takeIf { it.type == s.type } ?: ExerciseCatalog.byType(s.type).first(),
             consecutiveSnoozes = count,
+            schedule = schedule,
+            meetingActive = meetingUntil != null && meetingUntil > System.currentTimeMillis(),
             message = msg,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AlertsUiState())
