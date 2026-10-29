@@ -108,6 +108,11 @@ fun ProfileScreen(onBack: () -> Unit, onSignedOut: () -> Unit, vm: ProfileViewMo
             }
             BreakeeCard {
                 Text("Apariencia", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    "Se aplica al pulsar Guardar cambios.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
                 DarkModeToggle(
                     tema = state.apariencia.tema,
                     onToggle = vm::setDarkMode,

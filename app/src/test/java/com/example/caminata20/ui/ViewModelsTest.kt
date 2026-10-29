@@ -427,7 +427,7 @@ class ViewModelsTest {
 
     // ---------- HU-13 / HU-19 (Apariencia) ----------
     @Test
-    fun `HU-13 cambiar tema persiste de inmediato en local`() = runTest {
+    fun `HU-13 el tema no se persiste hasta guardar`() = runTest {
         val prefs = FakePreferencesRepository(); val local = FakeLocalState()
         val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
         val vm = SettingsViewModel(prefs, local, sync)
@@ -437,13 +437,18 @@ class ViewModelsTest {
         advanceUntilIdle()
 
         assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
+        assertEquals(TemaApp.SISTEMA, local.aparienciaState.value.tema)
+        assertEquals(TemaApp.SISTEMA, prefs.aparienciaState.value.tema)
+        assertFalse(vm.state.value.saved)
+
+        vm.save()
+        advanceUntilIdle()
         assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
         assertEquals(TemaApp.OSCURO, prefs.aparienciaState.value.tema)
-        assertFalse(vm.state.value.saved) // no se llamó save()
     }
 
     @Test
-    fun `HU-13 el perfil activa y desactiva el modo oscuro`() = runTest {
+    fun `HU-13 el perfil aplica el modo oscuro al guardar`() = runTest {
         val local = FakeLocalState()
         val vm = ProfileViewModel(FakeProfileRepository(), FakeAuthRepository(), local)
         advanceUntilIdle()
@@ -451,16 +456,24 @@ class ViewModelsTest {
         vm.setDarkMode(true)
         advanceUntilIdle()
         assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
+        assertEquals(TemaApp.SISTEMA, local.aparienciaState.value.tema)
+
+        vm.save()
+        advanceUntilIdle()
         assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
 
         vm.setDarkMode(false)
         advanceUntilIdle()
         assertEquals(TemaApp.CLARO, vm.state.value.apariencia.tema)
+        assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
+
+        vm.save()
+        advanceUntilIdle()
         assertEquals(TemaApp.CLARO, local.aparienciaState.value.tema)
     }
 
     @Test
-    fun `HU-13 interruptor de modo oscuro activa y desactiva el tema`() = runTest {
+    fun `HU-13 interruptor de modo oscuro cambia al guardar`() = runTest {
         val prefs = FakePreferencesRepository(); val local = FakeLocalState()
         val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
         val vm = SettingsViewModel(prefs, local, sync)
@@ -469,16 +482,24 @@ class ViewModelsTest {
         vm.setDarkMode(true)
         advanceUntilIdle()
         assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
+        assertEquals(TemaApp.SISTEMA, local.aparienciaState.value.tema)
+
+        vm.save()
+        advanceUntilIdle()
         assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
 
         vm.setDarkMode(false)
         advanceUntilIdle()
         assertEquals(TemaApp.CLARO, vm.state.value.apariencia.tema)
+        assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
+
+        vm.save()
+        advanceUntilIdle()
         assertEquals(TemaApp.CLARO, local.aparienciaState.value.tema)
     }
 
     @Test
-    fun `HU-13 cambiar escala de texto persiste de inmediato en local`() = runTest {
+    fun `HU-13 la escala de texto no se persiste hasta guardar`() = runTest {
         val prefs = FakePreferencesRepository(); val local = FakeLocalState()
         val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
         val vm = SettingsViewModel(prefs, local, sync)
@@ -488,8 +509,12 @@ class ViewModelsTest {
         advanceUntilIdle()
 
         assertEquals(EscalaTexto.EXTRA_GRANDE, vm.state.value.apariencia.escalaTexto)
-        assertEquals(EscalaTexto.EXTRA_GRANDE, local.aparienciaState.value.escalaTexto)
+        assertEquals(EscalaTexto.NORMAL, local.aparienciaState.value.escalaTexto)
         assertFalse(vm.state.value.saved)
+
+        vm.save()
+        advanceUntilIdle()
+        assertEquals(EscalaTexto.EXTRA_GRANDE, local.aparienciaState.value.escalaTexto)
     }
 
     @Test

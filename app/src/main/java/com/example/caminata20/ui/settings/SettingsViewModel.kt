@@ -110,9 +110,9 @@ class SettingsViewModel @Inject constructor(
         it.copy(hidratacion = it.hidratacion.copy(intervaloMin = minutes), saved = false)
     }
 
+    /** HU-13: el tema se aplica al guardar, no al tocar el control. */
     fun setTheme(tema: TemaApp) {
         _state.update { it.copy(apariencia = it.apariencia.copy(tema = tema), saved = false) }
-        persistApariencia()
     }
 
     /** HU-13: interruptor "Modo oscuro" (ON = oscuro, OFF = claro). */
@@ -120,16 +120,6 @@ class SettingsViewModel @Inject constructor(
 
     fun setTextScale(escala: EscalaTexto) {
         _state.update { it.copy(apariencia = it.apariencia.copy(escalaTexto = escala), saved = false) }
-        persistApariencia()
-    }
-
-    /** HU-13: el cambio se aplica al instante; local es obligatorio, Firestore best-effort. */
-    private fun persistApariencia() {
-        val apariencia = _state.value.apariencia
-        viewModelScope.launch {
-            local.saveApariencia(apariencia)
-            runCatching { prefs.saveApariencia(apariencia) }
-        }
     }
 
     fun enableMeeting(minutes: Int) = viewModelScope.launch {

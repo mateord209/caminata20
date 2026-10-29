@@ -28,6 +28,7 @@
         <!-- Única Activity: todas las pantallas son destinos de Navigation Compose -->
         <activity
             android:name=".MainActivity"
+            android:configChanges="uiMode"
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/Theme.Breakee"

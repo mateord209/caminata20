@@ -132,7 +132,7 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
             Text("Apariencia", style = MaterialTheme.typography.titleLarge)
             BreakeeCard {
                 Text(
-                    "El tema y el tamaño del texto se aplican al instante.",
+                    "El tema y el tamaño del texto se aplican al guardar.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -50,13 +50,12 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    /** HU-13: el interruptor de Mi Perfil aplica y persiste el tema al instante. */
+    /** HU-13: el interruptor de Mi Perfil se aplica al pulsar "Guardar cambios". */
     fun setDarkMode(enabled: Boolean) {
         val apariencia = _state.value.apariencia.copy(
             tema = if (enabled) TemaApp.OSCURO else TemaApp.CLARO,
         )
-        _state.update { it.copy(apariencia = apariencia) }
-        viewModelScope.launch { local.saveApariencia(apariencia) }
+        _state.update { it.copy(apariencia = apariencia, saved = false) }
     }
 
     fun onNameChange(v: String) = _state.update { it.copy(name = v, nameError = null, saved = false) }
@@ -76,6 +75,7 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             repo.saveName(s.name)
             repo.saveGoal(s.goal)
+            local.saveApariencia(s.apariencia)
             _state.update { it.copy(saved = true) }
         }
     }
