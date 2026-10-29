@@ -49,13 +49,23 @@ class SettingsViewModel @Inject constructor(
     private suspend fun cargarDesdePreferencias() {
         val schedule = prefs.currentSchedule()
         val meeting = local.meetingUntil.first()
+        // HU-13: la copia local es la fuente principal (funciona sin sesión).
+        val localApariencia = local.apariencia.first()
+        val remotaApariencia = runCatching { prefs.apariencia.first() }.getOrDefault(AparienciaApp())
+        val apariencia = if (localApariencia == AparienciaApp() && remotaApariencia != AparienciaApp()) {
+            // Migración suave: solo si local está en defaults se adopta lo guardado en la nube.
+            runCatching { local.saveApariencia(remotaApariencia) }
+            remotaApariencia
+        } else {
+            localApariencia
+        }
         _state.update {
             it.copy(
                 intervalMin = schedule.intervalMin,
                 activeDays = schedule.activeDays,
                 profiles = prefs.scheduleProfiles.first(),
                 hidratacion = prefs.hidratacion.first(),
-                apariencia = prefs.apariencia.first(),
+                apariencia = apariencia,
                 meetingActive = meeting != null && meeting > System.currentTimeMillis(),
             )
         }
@@ -100,9 +110,24 @@ class SettingsViewModel @Inject constructor(
         it.copy(hidratacion = it.hidratacion.copy(intervaloMin = minutes), saved = false)
     }
 
-    fun setTheme(tema: TemaApp) = _state.update { it.copy(apariencia = it.apariencia.copy(tema = tema), saved = false) }
+    fun setTheme(tema: TemaApp) {
+        _state.update { it.copy(apariencia = it.apariencia.copy(tema = tema), saved = false) }
+        persistApariencia()
+    }
 
-    fun setTextScale(escala: EscalaTexto) = _state.update { it.copy(apariencia = it.apariencia.copy(escalaTexto = escala), saved = false) }
+    fun setTextScale(escala: EscalaTexto) {
+        _state.update { it.copy(apariencia = it.apariencia.copy(escalaTexto = escala), saved = false) }
+        persistApariencia()
+    }
+
+    /** HU-13: el cambio se aplica al instante; local es obligatorio, Firestore best-effort. */
+    private fun persistApariencia() {
+        val apariencia = _state.value.apariencia
+        viewModelScope.launch {
+            local.saveApariencia(apariencia)
+            runCatching { prefs.saveApariencia(apariencia) }
+        }
+    }
 
     fun enableMeeting(minutes: Int) = viewModelScope.launch {
         local.setMeetingUntil(System.currentTimeMillis() + minutes * 60_000L)
@@ -121,7 +146,8 @@ class SettingsViewModel @Inject constructor(
         prefs.saveReminderSchedule(ReminderScheduleConfig(ui.intervalMin, ui.activeDays))
         prefs.saveScheduleProfiles(ui.profiles)
         prefs.saveHidratacion(ui.hidratacion)
-        prefs.saveApariencia(ui.apariencia)
+        local.saveApariencia(ui.apariencia)
+        runCatching { prefs.saveApariencia(ui.apariencia) }
         scheduleSync.syncAll()
         _state.update { it.copy(message = "Configuración guardada", saved = true) }
     }

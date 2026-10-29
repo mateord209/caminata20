@@ -1,7 +1,8 @@
 package com.example.caminata20.ui.components
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +18,9 @@ import androidx.compose.ui.unit.dp
 
 private val PillShape = RoundedCornerShape(50)
 
+/** Padding vertical que permite crecer al texto a 120 % / 140 % (HU-19). */
+private val ButtonContentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
+
 /** Botón principal (verde primario, forma píldora). */
 @Composable
 fun PrimaryButton(
@@ -30,7 +34,8 @@ fun PrimaryButton(
         onClick = onClick,
         enabled = enabled,
         shape = PillShape,
-        modifier = modifier.height(52.dp),
+        modifier = modifier.heightIn(min = 52.dp),
+        contentPadding = ButtonContentPadding,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -57,7 +62,8 @@ fun SecondaryButton(
         onClick = onClick,
         enabled = enabled,
         shape = PillShape,
-        modifier = modifier.height(52.dp),
+        modifier = modifier.heightIn(min = 52.dp),
+        contentPadding = ButtonContentPadding,
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,

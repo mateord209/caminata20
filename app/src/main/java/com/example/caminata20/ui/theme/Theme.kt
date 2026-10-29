@@ -49,6 +49,9 @@ val LocalStatusColors = staticCompositionLocalOf {
     BreakeeStatusColors(BreakeeLight.success, BreakeeLight.successContainer, BreakeeLight.warning, BreakeeLight.warningContainer)
 }
 
+/** HU-19: escala de texto activa (1f = 100 %). Permite layouts que se adaptan a 120 % / 140 %. */
+val LocalTextScale = staticCompositionLocalOf { 1f }
+
 val BreakeeShapes = Shapes(
     small = RoundedCornerShape(12.dp),
     medium = RoundedCornerShape(16.dp),
@@ -89,7 +92,10 @@ fun BreakeeTheme(
     } else {
         BreakeeStatusColors(BreakeeLight.success, BreakeeLight.successContainer, BreakeeLight.warning, BreakeeLight.warningContainer)
     }
-    CompositionLocalProvider(LocalStatusColors provides status) {
+    CompositionLocalProvider(
+        LocalStatusColors provides status,
+        LocalTextScale provides textScale,
+    ) {
         MaterialTheme(
             colorScheme = if (darkTheme) DarkColors else LightColors,
             typography = scaledTypography(textScale),

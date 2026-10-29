@@ -83,10 +83,14 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
                     else "Silencia las alertas durante una reunión.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                    SecondaryButton("30 min", onClick = { vm.enableMeeting(30) }, modifier = Modifier.weight(1f))
-                    SecondaryButton("1 h", onClick = { vm.enableMeeting(60) }, modifier = Modifier.weight(1f))
-                    SecondaryButton("Desactivar", onClick = vm::disableMeeting, modifier = Modifier.weight(1f))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
+                    SecondaryButton("30 min", onClick = { vm.enableMeeting(30) })
+                    SecondaryButton("1 h", onClick = { vm.enableMeeting(60) })
+                    SecondaryButton("Desactivar", onClick = vm::disableMeeting)
                 }
             }
 
@@ -126,7 +130,12 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
 
             Text("Apariencia", style = MaterialTheme.typography.titleLarge)
             BreakeeCard {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "El tema y el tamaño del texto se aplican al instante.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
                     TemaApp.entries.forEach { tema ->
                         SelectableChip(
                             when (tema) {
@@ -139,13 +148,17 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
                         )
                     }
                 }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
                     EscalaTexto.entries.forEach { escala ->
                         SelectableChip(
                             when (escala) {
-                                EscalaTexto.NORMAL -> "Texto normal"
-                                EscalaTexto.GRANDE -> "Texto grande"
-                                EscalaTexto.EXTRA_GRANDE -> "Texto extra grande"
+                                EscalaTexto.NORMAL -> "Normal (100 %)"
+                                EscalaTexto.GRANDE -> "Grande (120 %)"
+                                EscalaTexto.EXTRA_GRANDE -> "Extra grande (140 %)"
                             },
                             selected = state.apariencia.escalaTexto == escala,
                             onClick = { vm.setTextScale(escala) },

@@ -6,9 +6,12 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.example.caminata20.domain.model.AparienciaApp
 import com.example.caminata20.domain.model.ConfigHidratacion
+import com.example.caminata20.domain.model.EscalaTexto
 import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.ReminderTime
+import com.example.caminata20.domain.model.TemaApp
 import com.example.caminata20.domain.repository.LocalStateRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -36,6 +39,8 @@ class LocalStateRepositoryImpl @Inject constructor(
         val HYDRATION_INTERVAL = intPreferencesKey("hydration_interval")
         val PHRASE_INDEX = intPreferencesKey("phrase_index")
         val PHRASE_AT = longPreferencesKey("phrase_at")
+        val APARIENCIA_TEMA = stringPreferencesKey("apariencia_tema")
+        val APARIENCIA_ESCALA = stringPreferencesKey("apariencia_escala")
         fun migrated(uid: String) = booleanPreferencesKey("migrated_$uid")
     }
 
@@ -110,6 +115,22 @@ class LocalStateRepositoryImpl @Inject constructor(
     override suspend fun setLastPhraseIndex(index: Int) { store.edit { it[Keys.PHRASE_INDEX] = index } }
     override suspend fun lastPhraseAt(): Long? = store.data.first()[Keys.PHRASE_AT]
     override suspend fun setLastPhraseAt(at: Long) { store.edit { it[Keys.PHRASE_AT] = at } }
+
+    override val apariencia: Flow<AparienciaApp> = store.data.map { prefs ->
+        AparienciaApp(
+            tema = runCatching { TemaApp.valueOf(prefs[Keys.APARIENCIA_TEMA] ?: "") }
+                .getOrDefault(TemaApp.SISTEMA),
+            escalaTexto = runCatching { EscalaTexto.valueOf(prefs[Keys.APARIENCIA_ESCALA] ?: "") }
+                .getOrDefault(EscalaTexto.NORMAL),
+        )
+    }
+
+    override suspend fun saveApariencia(apariencia: AparienciaApp) {
+        store.edit {
+            it[Keys.APARIENCIA_TEMA] = apariencia.tema.name
+            it[Keys.APARIENCIA_ESCALA] = apariencia.escalaTexto.name
+        }
+    }
 
     companion object {
         fun daysToMask(days: Set<Int>): Int = ReminderScheduleConfig.daysToMask(days)

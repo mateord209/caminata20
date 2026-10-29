@@ -4,18 +4,18 @@ import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,25 +26,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.caminata20.domain.model.PauseType
 import com.example.caminata20.ui.components.BreakeeCard
-import com.example.caminata20.ui.components.PauseTypeIcon
+import com.example.caminata20.ui.components.PauseHistoryRow
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.ProgressBar
+import com.example.caminata20.ui.components.SelectableChip
 import com.example.caminata20.ui.components.StatCard
 import com.example.caminata20.ui.components.TopBar
-import com.example.caminata20.ui.theme.BreakeeThemeExt
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.example.caminata20.ui.components.icon
 
 /** HU-04, HU-05, HU-09, HU-17, HU-18. */
 @Composable
 fun StatsScreen(title: String, vm: StatsViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val locale = Locale.forLanguageTag("es-CO")
-    val hourFmt = SimpleDateFormat("dd/MM HH:mm", locale)
-    val status = BreakeeThemeExt.status
 
     Column(Modifier.fillMaxSize()) {
         TopBar(title = title)
@@ -74,32 +70,70 @@ fun StatsScreen(title: String, vm: StatsViewModel = hiltViewModel()) {
                 }
             }
 
+            BreakeeCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Resumen semanal", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "${state.weeklyCompleted} de ${state.weeklyExpected} pausas completadas",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Text(
+                        "${state.weeklyPercent}%",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+
             PrimaryButton(
                 "Compartir resumen",
                 onClick = {
-                    val intent = Intent(Intent.ACTION_SEND).apply {
+                    val send = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, state.shareText)
+                        putExtra(Intent.EXTRA_SUBJECT, "Mi resumen semanal · Breakee")
                     }
-                    context.startActivity(Intent.createChooser(intent, "Compartir resumen semanal"))
+                    runCatching {
+                        context.startActivity(Intent.createChooser(send, "Compartir resumen semanal"))
+                    }
                 },
                 icon = Icons.Filled.Share,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             Text("Historial de pausas completadas", style = MaterialTheme.typography.titleLarge)
-            if (state.history.isEmpty()) {
-                Text("Aún no hay pausas completadas registradas.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                item {
+                    SelectableChip(
+                        label = "Todas",
+                        selected = state.typeFilter == null,
+                        onClick = { vm.onFilterType(null) },
+                    )
+                }
+                items(PauseType.entries) { type ->
+                    SelectableChip(
+                        label = type.title,
+                        selected = state.typeFilter == type,
+                        onClick = { vm.onFilterType(type) },
+                        leadingIcon = type.icon,
+                    )
+                }
             }
-            state.history.forEach { r ->
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    PauseTypeIcon(r.type, size = 28.dp)
-                    Spacer(Modifier.width(8.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text(r.type.title, style = MaterialTheme.typography.bodyMedium)
-                        Text(hourFmt.format(Date(r.timestamp)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Text("✓", color = status.success)
+            if (state.history.isEmpty()) {
+                Text(
+                    text = if (state.typeFilter == null) {
+                        "Aún no hay pausas completadas registradas."
+                    } else {
+                        "No hay pausas de esta categoría."
+                    },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                state.history.forEach { record ->
+                    PauseHistoryRow(record = record, showDate = true)
                 }
             }
         }
