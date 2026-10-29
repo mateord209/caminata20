@@ -1,0 +1,56 @@
+package com.example.caminata20.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+// Breakee «Verde Pastel Profesional» v1.0 — ver designforge/breakee/design-system.md
+object BreakeeLight {
+    val primary = Color(0xFF2F7A57)
+    val onPrimary = Color(0xFFFFFFFF)
+    val primaryContainer = Color(0xFFCDEBD9)
+    val onPrimaryContainer = Color(0xFF0F3A26)
+    val secondary = Color(0xFF3F7F7A)
+    val onSecondary = Color(0xFFFFFFFF)
+    val secondaryContainer = Color(0xFFD3EEEA)
+    val onSecondaryContainer = Color(0xFF123B37)
+    val background = Color(0xFFF4FAF6)
+    val surface = Color(0xFFFFFFFF)
+    val surfaceVariant = Color(0xFFE4F2EA)
+    val outline = Color(0xFFB9D3C5)
+    val onBackground = Color(0xFF17322A)
+    val onSurface = Color(0xFF17322A)
+    val onSurfaceVariant = Color(0xFF4A6358)
+    val success = Color(0xFF2E7D32)
+    val warning = Color(0xFF9A5B00)
+    val error = Color(0xFFB3261E)
+    val successContainer = Color(0xFFDCF2DD)
+    val warningContainer = Color(0xFFFCEBCF)
+    val errorContainer = Color(0xFFFADCD9)
+    val inverseSurface = Color(0xFF1F3A30)
+    val inverseOnSurface = Color(0xFFE3F1E9)
+}
+
+object BreakeeDark {
+    val primary = Color(0xFF9ED9B8)
+    val onPrimary = Color(0xFF0B3B26)
+    val primaryContainer = Color(0xFF24563F)
+    val onPrimaryContainer = Color(0xFFCDEBD9)
+    val secondary = Color(0xFF9CD3CC)
+    val onSecondary = Color(0xFF0E3632)
+    val secondaryContainer = Color(0xFF24524D)
+    val onSecondaryContainer = Color(0xFFD3EEEA)
+    val background = Color(0xFF0F1A16)
+    val surface = Color(0xFF17241F)
+    val surfaceVariant = Color(0xFF21332B)
+    val outline = Color(0xFF3C5649)
+    val onBackground = Color(0xFFE3F1E9)
+    val onSurface = Color(0xFFE3F1E9)
+    val onSurfaceVariant = Color(0xFFA9C2B6)
+    val success = Color(0xFF8FD6A0)
+    val warning = Color(0xFFF2C078)
+    val error = Color(0xFFF2B8B5)
+    val successContainer = Color(0xFF1E4027)
+    val warningContainer = Color(0xFF4A3511)
+    val errorContainer = Color(0xFF5C1F1B)
+    val inverseSurface = Color(0xFFE3F1E9)
+    val inverseOnSurface = Color(0xFF17322A)
+}

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Breakee design system — dark palette -->
+<resources>
+    <color name="breakee_primary">#9ED9B8</color>
+    <color name="breakee_onPrimary">#0B3B26</color>
+    <color name="breakee_primaryContainer">#24563F</color>
+    <color name="breakee_onPrimaryContainer">#CDEBD9</color>
+    <color name="breakee_secondary">#9CD3CC</color>
+    <color name="breakee_onSecondary">#0E3632</color>
+    <color name="breakee_secondaryContainer">#24524D</color>
+    <color name="breakee_onSecondaryContainer">#D3EEEA</color>
+    <color name="breakee_background">#0F1A16</color>
+    <color name="breakee_surface">#17241F</color>
+    <color name="breakee_surfaceVariant">#21332B</color>
+    <color name="breakee_outline">#3C5649</color>
+    <color name="breakee_onBackground">#E3F1E9</color>
+    <color name="breakee_onSurface">#E3F1E9</color>
+    <color name="breakee_onSurfaceVariant">#A9C2B6</color>
+    <color name="breakee_success">#8FD6A0</color>
+    <color name="breakee_warning">#F2C078</color>
+    <color name="breakee_error">#F2B8B5</color>
+    <color name="breakee_successContainer">#1E4027</color>
+    <color name="breakee_warningContainer">#4A3511</color>
+    <color name="breakee_errorContainer">#5C1F1B</color>
+    <color name="breakee_inverseSurface">#E3F1E9</color>
+    <color name="breakee_inverseOnSurface">#17322A</color>
+    <!-- Círculo detrás de la figura en el SplashScreen de Android 12+ -->
+    <color name="breakee_splash_icon_bg">#E3F4EA</color>
+</resources>

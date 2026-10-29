@@ -1,0 +1,162 @@
+name: Android release
+
+on:
+  push:
+    branches: [main, developRamirez]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      VERSION_CODE: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Caché de Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Versión
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+          else
+            VERSION_NAME="1.0.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
+          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: local.properties (GROQ_API_KEY opcional)
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_PROXY_URL: ${{ secrets.GROQ_PROXY_URL }}
+        run: |
+          {
+            echo "sdk.dir=$ANDROID_HOME"
+            [ -n "$GROQ_API_KEY" ] && echo "GROQ_API_KEY=$GROQ_API_KEY"
+            [ -n "$GROQ_PROXY_URL" ] && echo "GROQ_PROXY_URL=$GROQ_PROXY_URL"
+            true
+          } > local.properties
+
+      - name: Keystore de release (opcional)
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+            # Solo la ruta va al entorno; las contraseñas se pasan como env del paso de build.
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "suffix=signed" >> "$GITHUB_OUTPUT"
+            echo "Release firmada con el keystore de los secrets."
+          else
+            echo "suffix=debugsigned" >> "$GITHUB_OUTPUT"
+            echo "::warning::Sin secrets de firma: la release se firma con la clave debug del runner (no apta para Play Store)."
+          fi
+
+      - name: Tests unitarios
+        run: ./gradlew testDebugUnitTest --stacktrace
+
+      - name: assembleRelease y bundleRelease
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleRelease bundleRelease --stacktrace
+
+      - name: Renombrar salidas
+        id: out
+        run: |
+          mkdir -p dist
+          BASE="breakee-${{ steps.version.outputs.name }}-release-${{ steps.signing.outputs.suffix }}"
+          cp app/build/outputs/apk/release/app-release.apk "dist/$BASE.apk"
+          cp app/build/outputs/bundle/release/app-release.aab "dist/$BASE.aab"
+          ls -la dist
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+
+      - name: Subir artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.out.outputs.base }}
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Reporte de tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: app/build/reports/tests/
+
+      - name: Limpiar keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+
+      # ---------- Publicación ----------
+      - name: Mover el tag rodante (latest / latest-dev)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/developRamirez')
+        id: rolling
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then TAG=latest; else TAG=latest-dev; fi
+          gh release delete "$TAG" --cleanup-tag --yes --repo "$GITHUB_REPOSITORY" || true
+          git push origin ":refs/tags/$TAG" 2>/dev/null || true
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: GitHub Release (tag v*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Breakee ${{ github.ref_name }}
+          generate_release_notes: true
+          make_latest: 'true'
+          files: dist/*
+
+      - name: GitHub Release (push a main → latest)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          target_commitish: ${{ github.sha }}
+          name: Breakee ${{ steps.version.outputs.name }} (main)
+          body: |
+            Build de `main` en ${{ github.sha }} (ejecución #${{ github.run_number }}).
+            Firma: **${{ steps.signing.outputs.suffix }}**.
+          files: dist/*
+
+      - name: Prerelease rodante (push a developRamirez → latest-dev)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/developRamirez'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-dev
+          target_commitish: ${{ github.sha }}
+          name: Breakee dev (latest-dev)
+          prerelease: true
+          make_latest: 'false'
+          body: |
+            Prerelease rodante de `developRamirez` en ${{ github.sha }} (ejecución #${{ github.run_number }}).
+            Firma: **${{ steps.signing.outputs.suffix }}**. Se reemplaza en cada push.
+          files: dist/*

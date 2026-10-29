@@ -1,9 +1,7 @@
 package com.example.caminata20
 
 import android.app.Application
+import dagger.hilt.android.HiltAndroidApp
 
-class CaminataApp : Application() {
-    override fun onCreate() {
-        super.onCreate()
-    }
-}
+@HiltAndroidApp
+class CaminataApp : Application()

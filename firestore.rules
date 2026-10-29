@@ -1,0 +1,57 @@
+rules_version = '2';
+
+// Breakee / caminata20 — cada usuario solo puede leer y escribir sus propios datos.
+// Estructura:
+//   users/{uid}                        perfil + meta diaria
+//   users/{uid}/settings/preferences   preferencias (tipo de pausa, recordatorio)
+//   users/{uid}/pauseHistory/{id}      historial de pausas
+//   users/{uid}/walks/{id}             caminatas
+//   users/{uid}/aiRoutines/{id}        rutinas de IA
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    match /users/{uid} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid)
+        && (!('dailyGoal' in request.resource.data)
+            || (request.resource.data.dailyGoal is int
+                && request.resource.data.dailyGoal >= 2
+                && request.resource.data.dailyGoal <= 15));
+
+      match /settings/{docId} {
+        allow read, write: if isOwner(uid);
+      }
+
+      match /pauseHistory/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.timestamp is int
+          && request.resource.data.status in ['COMPLETADA', 'POSPUESTA'];
+        allow update: if false; // el historial es de solo agregar
+      }
+
+      match /walks/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && request.resource.data.steps is int && request.resource.data.steps >= 0
+          && request.resource.data.km is number && request.resource.data.km >= 0;
+        allow update: if false;
+      }
+
+      match /aiRoutines/{id} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid) && request.resource.data.exercises is list;
+        allow update: if false;
+      }
+    }
+
+    // Todo lo demás está cerrado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

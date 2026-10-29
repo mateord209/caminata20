@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema de ventana de la única Activity (los colores reales vienen de BreakeeTheme en Compose). -->
+    <style name="Theme.Breakee" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/breakee_background</item>
+        <item name="android:colorPrimary">@color/breakee_primary</item>
+        <item name="android:colorAccent">@color/breakee_primary</item>
+    </style>
+</resources>

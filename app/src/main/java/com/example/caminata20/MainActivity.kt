@@ -1,95 +1,55 @@
 package com.example.caminata20
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.firebase.auth.FirebaseAuth
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.example.caminata20.data.migration.LegacyDataMigrator
+import com.example.caminata20.di.ApplicationScope
+import com.example.caminata20.domain.repository.AuthRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import com.example.caminata20.ui.BreakeeApp
+import com.example.caminata20.ui.theme.BreakeeTheme
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-class MainActivity : AppCompatActivity() {
+/** Única Activity de la app: aloja el grafo de Navigation Compose. */
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
+    @Inject lateinit var auth: AuthRepository
+    @Inject lateinit var migrator: LegacyDataMigrator
+    @Inject @ApplicationScope lateinit var appScope: CoroutineScope
 
-    private lateinit var auth: FirebaseAuth
+    private var deepLink by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        auth = FirebaseAuth.getInstance()
-
-        val tvUserName = findViewById<TextView>(R.id.tvUserName)
-        val user = auth.currentUser
-
-        tvUserName.text = "Usuario: " + (user?.displayName?.takeIf { it.isNotBlank() }
-            ?: user?.email
-            ?: "Invitado")
-
-        tvUserName.isSelected = true
-
-        val walkPrefs = getSharedPreferences("walk_stats", Context.MODE_PRIVATE)
-        findViewById<TextView>(R.id.tvTotalSteps).text = walkPrefs.getInt("total_steps", 0).toString()
-        findViewById<TextView>(R.id.tvTotalKm).text = String.format("%.2f km", walkPrefs.getFloat("total_km", 0f))
-        findViewById<TextView>(R.id.tvWeekTotal).text = String.format("%.2f km", walkPrefs.getFloat("week_km", 0f))
-
-        val btnLogout = findViewById<Button>(R.id.btnLogout)
-        btnLogout.setOnClickListener {
-            val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build()
-            val googleSignInClient = GoogleSignIn.getClient(this, gso)
-            googleSignInClient.signOut()
-            auth.signOut()
-
-            val intent = Intent(this, LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            finish()
-        }
-
-        findViewById<Button>(R.id.btnStartWalk).setOnClickListener {
-            startActivity(Intent(this, WalkActivity::class.java))
-        }
-
-        findViewById<Button>(R.id.btnWalkHistory).setOnClickListener {
-            startActivity(Intent(this, WalkHistoryActivity::class.java))
-        }
-
-        findViewById<Button>(R.id.btnExercisesAI).setOnClickListener {
-            startActivity(Intent(this, ExercisesAIActivity::class.java))
-        }
-
-        findViewById<Button>(R.id.btnExercisesAIHistory).setOnClickListener {
-            startActivity(Intent(this, ExercisesAIHistoryActivity::class.java))
-        }
-
-        findViewById<LinearLayout>(R.id.navHome).setOnClickListener {
-            // Ya estamos en Home
-        }
-        findViewById<LinearLayout>(R.id.navProfile).setOnClickListener {
-            Toast.makeText(this, "Perfil (próximamente)", Toast.LENGTH_SHORT).show()
-        }
-        findViewById<LinearLayout>(R.id.navMap).setOnClickListener {
-            Toast.makeText(this, "Mapa (próximamente)", Toast.LENGTH_SHORT).show()
-        }
-        findViewById<LinearLayout>(R.id.navProgress).setOnClickListener {
-            Toast.makeText(this, "Progreso (próximamente)", Toast.LENGTH_SHORT).show()
-        }
-        findViewById<LinearLayout>(R.id.navAI).setOnClickListener {
-            Toast.makeText(this, "IA (próximamente)", Toast.LENGTH_SHORT).show()
-        }
-        findViewById<LinearLayout>(R.id.navSettings).setOnClickListener {
-            startActivity(Intent(this, ReminderActivity::class.java))
+        enableEdgeToEdge()
+        deepLink = intent.getStringExtra(EXTRA_ROUTE)
+        setContent {
+            BreakeeTheme {
+                BreakeeApp(
+                    deepLink = deepLink,
+                    isSignedIn = { auth.currentUserOrNull() != null },
+                    // Migra SharedPreferences/DataStore → Firestore una vez por usuario
+                    onAuthenticated = { appScope.launch { runCatching { migrator.migrateIfNeeded() } } },
+                )
+            }
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        val walkPrefs = getSharedPreferences("walk_stats", Context.MODE_PRIVATE)
-        findViewById<TextView>(R.id.tvTotalSteps).text = walkPrefs.getInt("total_steps", 0).toString()
-        findViewById<TextView>(R.id.tvTotalKm).text = String.format("%.2f km", walkPrefs.getFloat("total_km", 0f))
-        findViewById<TextView>(R.id.tvWeekTotal).text = String.format("%.2f km", walkPrefs.getFloat("week_km", 0f))
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        deepLink = intent.getStringExtra(EXTRA_ROUTE)
+    }
+
+    companion object {
+        const val EXTRA_ROUTE = "extra_route"
     }
 }
