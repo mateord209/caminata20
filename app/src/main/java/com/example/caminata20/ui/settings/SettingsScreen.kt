@@ -1,6 +1,5 @@
 package com.example.caminata20.ui.settings
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -21,7 +19,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -30,6 +27,7 @@ import com.example.caminata20.domain.model.EscalaTexto
 import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.TemaApp
 import com.example.caminata20.ui.components.BreakeeCard
+import com.example.caminata20.ui.components.DarkModeToggle
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.SecondaryButton
 import com.example.caminata20.ui.components.SelectableChip
@@ -138,37 +136,11 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                val systemDark = isSystemInDarkTheme()
-                val darkEnabled = when (state.apariencia.tema) {
-                    TemaApp.OSCURO -> true
-                    TemaApp.CLARO -> false
-                    TemaApp.SISTEMA -> systemDark
-                }
-                Row(
-                    Modifier
-                        .fillMaxWidth()
-                        .toggleable(
-                            value = darkEnabled,
-                            role = Role.Switch,
-                            onValueChange = vm::setDarkMode,
-                        )
-                        .padding(top = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f)) {
-                        Text("Modo oscuro", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            when {
-                                state.apariencia.tema == TemaApp.SISTEMA -> "Siguiendo el tema del sistema"
-                                darkEnabled -> "Activado"
-                                else -> "Desactivado"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Switch(checked = darkEnabled, onCheckedChange = null)
-                }
+                DarkModeToggle(
+                    tema = state.apariencia.tema,
+                    onToggle = vm::setDarkMode,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
                 SelectableChip(
                     label = "Seguir el tema del sistema",
                     selected = state.apariencia.tema == TemaApp.SISTEMA,

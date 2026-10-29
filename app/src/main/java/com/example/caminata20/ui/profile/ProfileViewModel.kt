@@ -2,8 +2,11 @@ package com.example.caminata20.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.caminata20.domain.model.AparienciaApp
 import com.example.caminata20.domain.model.Profile
+import com.example.caminata20.domain.model.TemaApp
 import com.example.caminata20.domain.repository.AuthRepository
+import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.ProfileRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +24,7 @@ data class ProfileUiState(
     val nameError: String? = null,
     val saved: Boolean = false,
     val signedOut: Boolean = false,
+    val apariencia: AparienciaApp = AparienciaApp(),
 ) {
     val initials: String
         get() = name.split(" ").filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
@@ -31,6 +35,7 @@ data class ProfileUiState(
 class ProfileViewModel @Inject constructor(
     private val repo: ProfileRepository,
     private val auth: AuthRepository,
+    private val local: LocalStateRepository,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ProfileUiState())
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
@@ -38,8 +43,20 @@ class ProfileViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val p = repo.profile.first()
-            _state.update { it.copy(name = p.name, email = p.email, goal = p.dailyGoal) }
+            val apariencia = local.apariencia.first()
+            _state.update {
+                it.copy(name = p.name, email = p.email, goal = p.dailyGoal, apariencia = apariencia)
+            }
         }
+    }
+
+    /** HU-13: el interruptor de Mi Perfil aplica y persiste el tema al instante. */
+    fun setDarkMode(enabled: Boolean) {
+        val apariencia = _state.value.apariencia.copy(
+            tema = if (enabled) TemaApp.OSCURO else TemaApp.CLARO,
+        )
+        _state.update { it.copy(apariencia = apariencia) }
+        viewModelScope.launch { local.saveApariencia(apariencia) }
     }
 
     fun onNameChange(v: String) = _state.update { it.copy(name = v, nameError = null, saved = false) }

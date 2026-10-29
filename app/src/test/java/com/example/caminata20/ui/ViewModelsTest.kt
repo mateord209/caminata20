@@ -174,7 +174,7 @@ class ViewModelsTest {
     @Test
     fun `perfil valida nombre, limita la meta y cierra sesion`() = runTest {
         val repo = FakeProfileRepository(); val auth = FakeAuthRepository()
-        val vm = ProfileViewModel(repo, auth)
+        val vm = ProfileViewModel(repo, auth, FakeLocalState())
         vm.onNameChange("  "); vm.save()
         assertEquals("El nombre no puede estar vacío", vm.state.value.nameError)
         vm.onGoalChange(40)
@@ -440,6 +440,23 @@ class ViewModelsTest {
         assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
         assertEquals(TemaApp.OSCURO, prefs.aparienciaState.value.tema)
         assertFalse(vm.state.value.saved) // no se llamó save()
+    }
+
+    @Test
+    fun `HU-13 el perfil activa y desactiva el modo oscuro`() = runTest {
+        val local = FakeLocalState()
+        val vm = ProfileViewModel(FakeProfileRepository(), FakeAuthRepository(), local)
+        advanceUntilIdle()
+
+        vm.setDarkMode(true)
+        advanceUntilIdle()
+        assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
+        assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
+
+        vm.setDarkMode(false)
+        advanceUntilIdle()
+        assertEquals(TemaApp.CLARO, vm.state.value.apariencia.tema)
+        assertEquals(TemaApp.CLARO, local.aparienciaState.value.tema)
     }
 
     @Test

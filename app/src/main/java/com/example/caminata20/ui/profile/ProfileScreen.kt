@@ -35,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.caminata20.domain.model.Profile
 import com.example.caminata20.ui.components.BreakeeCard
+import com.example.caminata20.ui.components.DarkModeToggle
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.Stepper
 import com.example.caminata20.ui.components.TopBar
@@ -104,6 +105,14 @@ fun ProfileScreen(onBack: () -> Unit, onSignedOut: () -> Unit, vm: ProfileViewMo
                     steps = range.last - range.first - 1,
                 )
                 Stepper(value = state.goal, onValueChange = vm::onGoalChange, range = range)
+            }
+            BreakeeCard {
+                Text("Apariencia", style = MaterialTheme.typography.titleLarge)
+                DarkModeToggle(
+                    tema = state.apariencia.tema,
+                    onToggle = vm::setDarkMode,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
             }
             PrimaryButton(
                 text = if (state.saved) "Guardado ✓" else "Guardar cambios",
