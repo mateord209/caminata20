@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +44,8 @@ private val ACTIONS = listOf(
     HomeAction("Ejercicios con IA", "Rutina de estiramientos generada", Icons.Filled.AutoAwesome, Routes.AI),
     HomeAction("Historial de rutinas IA", "Rutinas completadas", Icons.AutoMirrored.Filled.ListAlt, Routes.AI_HISTORY),
     HomeAction("Recordatorio diario", "Aviso a una hora fija", Icons.Filled.Alarm, Routes.REMINDER),
+    HomeAction("Ajustes de alertas", "Intervalos, perfiles e hidratación", Icons.Filled.Settings, Routes.SETTINGS),
+    HomeAction("Permisos", "Notificaciones y alarmas exactas", Icons.Filled.Alarm, Routes.PERMISSIONS),
 )
 
 /** Pestaña Inicio (reemplaza a la MainActivity XML). */
@@ -58,6 +61,18 @@ fun HomeScreen(onNavigate: (String) -> Unit, vm: HomeViewModel = hiltViewModel()
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text("Hola, ${state.userName}", style = MaterialTheme.typography.titleLarge)
+            if (state.motivationalPhrase.isNotBlank()) {
+                BreakeeCard {
+                    Text("Tip del día", style = MaterialTheme.typography.labelMedium)
+                    Text(state.motivationalPhrase, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            if (state.meetingActive) {
+                BreakeeCard(highlighted = true) {
+                    Text("Modo reunión activo", style = MaterialTheme.typography.titleMedium)
+                    Text("Las alertas se reanudarán al terminar el silencio.", style = MaterialTheme.typography.bodySmall)
+                }
+            }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StatCard("${state.stats.totalSteps}", "Pasos totales", Icons.AutoMirrored.Filled.DirectionsWalk, Modifier.weight(1f))
                 StatCard("%.2f km".format(state.stats.totalKm), "Distancia", Icons.Filled.Route, Modifier.weight(1f))

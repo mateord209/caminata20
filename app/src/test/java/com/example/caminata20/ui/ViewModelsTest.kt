@@ -9,7 +9,9 @@ import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
 import com.example.caminata20.domain.model.WalkSession
 import com.example.caminata20.domain.usecase.Clock
+import com.example.caminata20.domain.usecase.FraseMotivacionalUseCase
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
+import com.example.caminata20.domain.usecase.PauseScheduleSync
 import com.example.caminata20.fakes.FakeAiRoutineRepository
 import com.example.caminata20.fakes.FakeAuthRepository
 import com.example.caminata20.fakes.FakeGenerator
@@ -192,7 +194,9 @@ class ViewModelsTest {
     @Test
     fun `alertas muestran advertencia tras mas de 3 posposiciones`() = runTest {
         val prefs = FakePreferencesRepository(); val local = FakeLocalState()
-        val useCase = PauseActionsUseCase(prefs, FakePauseHistoryRepository(), local, FakePauseScheduler(), FakeNotifications(), Clock { 0 })
+        val scheduler = FakePauseScheduler()
+        val sync = PauseScheduleSync(prefs, local, scheduler, FakeReminderScheduler())
+        val useCase = PauseActionsUseCase(prefs, FakePauseHistoryRepository(), local, scheduler, sync, FakeNotifications(), Clock { 0 })
         val vm = AlertsViewModel(prefs, local, useCase)
         keep(vm.state)
         repeat(3) { vm.snooze() }
@@ -207,7 +211,8 @@ class ViewModelsTest {
     @Test
     fun `inicio calcula totales desde las caminatas`() = runTest {
         val walks = FakeWalkRepository()
-        val vm = HomeViewModel(FakeProfileRepository(), walks, FakePreferencesRepository())
+        val local = FakeLocalState()
+        val vm = HomeViewModel(FakeProfileRepository(), walks, FakePreferencesRepository(), local, FraseMotivacionalUseCase(local))
         keep(vm.state)
         walks.add(WalkSession(System.currentTimeMillis(), 1000, 0.75))
         walks.add(WalkSession(System.currentTimeMillis(), 500, 0.25))
@@ -219,7 +224,8 @@ class ViewModelsTest {
     @Test
     fun `HU-08 inicio refleja al instante el cambio de tipo de pausa`() = runTest {
         val prefs = FakePreferencesRepository()
-        val home = HomeViewModel(FakeProfileRepository(), FakeWalkRepository(), prefs)
+        val local = FakeLocalState()
+        val home = HomeViewModel(FakeProfileRepository(), FakeWalkRepository(), prefs, local, FraseMotivacionalUseCase(local))
         keep(home.state)
         assertEquals(PauseType.ESTIRAMIENTO, home.state.value.pauseSettings.type)
 
@@ -245,7 +251,9 @@ class ViewModelsTest {
     @Test
     fun `HU-08 alertas y mi dia siguen el tipo de pausa actual`() = runTest {
         val prefs = FakePreferencesRepository(); val local = FakeLocalState()
-        val useCase = PauseActionsUseCase(prefs, FakePauseHistoryRepository(), local, FakePauseScheduler(), FakeNotifications(), Clock { 0 })
+        val scheduler = FakePauseScheduler()
+        val sync = PauseScheduleSync(prefs, local, scheduler, FakeReminderScheduler())
+        val useCase = PauseActionsUseCase(prefs, FakePauseHistoryRepository(), local, scheduler, sync, FakeNotifications(), Clock { 0 })
         val alerts = AlertsViewModel(prefs, local, useCase)
         val myDay = MyDayViewModel(FakeProfileRepository(), FakePauseHistoryRepository(), prefs, local)
         keep(alerts.state); keep(myDay.state)
