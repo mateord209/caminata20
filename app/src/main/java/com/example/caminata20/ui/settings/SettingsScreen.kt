@@ -1,5 +1,6 @@
 package com.example.caminata20.ui.settings
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -19,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -135,19 +138,43 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                    TemaApp.entries.forEach { tema ->
-                        SelectableChip(
-                            when (tema) {
-                                TemaApp.CLARO -> "Claro"
-                                TemaApp.OSCURO -> "Oscuro"
-                                TemaApp.SISTEMA -> "Sistema"
+                val systemDark = isSystemInDarkTheme()
+                val darkEnabled = when (state.apariencia.tema) {
+                    TemaApp.OSCURO -> true
+                    TemaApp.CLARO -> false
+                    TemaApp.SISTEMA -> systemDark
+                }
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .toggleable(
+                            value = darkEnabled,
+                            role = Role.Switch,
+                            onValueChange = vm::setDarkMode,
+                        )
+                        .padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Modo oscuro", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            when {
+                                state.apariencia.tema == TemaApp.SISTEMA -> "Siguiendo el tema del sistema"
+                                darkEnabled -> "Activado"
+                                else -> "Desactivado"
                             },
-                            selected = state.apariencia.tema == tema,
-                            onClick = { vm.setTheme(tema) },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
+                    Switch(checked = darkEnabled, onCheckedChange = null)
                 }
+                SelectableChip(
+                    label = "Seguir el tema del sistema",
+                    selected = state.apariencia.tema == TemaApp.SISTEMA,
+                    onClick = { vm.setTheme(TemaApp.SISTEMA) },
+                    modifier = Modifier.padding(top = 4.dp),
+                )
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),

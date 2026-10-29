@@ -443,6 +443,24 @@ class ViewModelsTest {
     }
 
     @Test
+    fun `HU-13 interruptor de modo oscuro activa y desactiva el tema`() = runTest {
+        val prefs = FakePreferencesRepository(); val local = FakeLocalState()
+        val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
+        val vm = SettingsViewModel(prefs, local, sync)
+        advanceUntilIdle()
+
+        vm.setDarkMode(true)
+        advanceUntilIdle()
+        assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
+        assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
+
+        vm.setDarkMode(false)
+        advanceUntilIdle()
+        assertEquals(TemaApp.CLARO, vm.state.value.apariencia.tema)
+        assertEquals(TemaApp.CLARO, local.aparienciaState.value.tema)
+    }
+
+    @Test
     fun `HU-13 cambiar escala de texto persiste de inmediato en local`() = runTest {
         val prefs = FakePreferencesRepository(); val local = FakeLocalState()
         val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())

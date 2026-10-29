@@ -115,6 +115,9 @@ class SettingsViewModel @Inject constructor(
         persistApariencia()
     }
 
+    /** HU-13: interruptor "Modo oscuro" (ON = oscuro, OFF = claro). */
+    fun setDarkMode(enabled: Boolean) = setTheme(if (enabled) TemaApp.OSCURO else TemaApp.CLARO)
+
     fun setTextScale(escala: EscalaTexto) {
         _state.update { it.copy(apariencia = it.apariencia.copy(escalaTexto = escala), saved = false) }
         persistApariencia()
