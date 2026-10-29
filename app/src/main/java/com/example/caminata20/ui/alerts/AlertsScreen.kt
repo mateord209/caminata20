@@ -37,11 +37,14 @@ import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.SecondaryButton
 import com.example.caminata20.ui.components.TopBar
 import com.example.caminata20.ui.theme.BreakeeThemeExt
+import com.example.caminata20.ui.theme.LocalTextScale
 
 @Composable
 fun AlertsScreen(onConfigure: () -> Unit, vm: AlertsViewModel = hiltViewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val status = BreakeeThemeExt.status
+    // HU-19: con texto ampliado los botones se apilan para no comprimir sus etiquetas.
+    val largeText = LocalTextScale.current > 1f
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Alertas", actions = {
             IconButton(onClick = onConfigure) { Icon(Icons.Filled.Tune, contentDescription = "Configurar pausa") }
@@ -71,9 +74,19 @@ fun AlertsScreen(onConfigure: () -> Unit, vm: AlertsViewModel = hiltViewModel())
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    PrimaryButton("Completar", onClick = { vm.complete() }, icon = Icons.Filled.Check, modifier = Modifier.weight(1f))
-                    SecondaryButton("Posponer 5 min", onClick = { vm.snooze() }, icon = Icons.Filled.Snooze, modifier = Modifier.weight(1f))
+                if (largeText) {
+                    Column(
+                        Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        PrimaryButton("Completar", onClick = { vm.complete() }, icon = Icons.Filled.Check, modifier = Modifier.fillMaxWidth())
+                        SecondaryButton("Posponer 5 min", onClick = { vm.snooze() }, icon = Icons.Filled.Snooze, modifier = Modifier.fillMaxWidth())
+                    }
+                } else {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        PrimaryButton("Completar", onClick = { vm.complete() }, icon = Icons.Filled.Check, modifier = Modifier.weight(1f))
+                        SecondaryButton("Posponer 5 min", onClick = { vm.snooze() }, icon = Icons.Filled.Snooze, modifier = Modifier.weight(1f))
+                    }
                 }
                 state.message?.let {
                     Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp))

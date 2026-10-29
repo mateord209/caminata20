@@ -143,6 +143,10 @@ class FakeLocalState : LocalStateRepository {
     private var phraseAt: Long? = null
     override suspend fun lastPhraseAt() = phraseAt
     override suspend fun setLastPhraseAt(at: Long) { phraseAt = at }
+
+    val aparienciaState = MutableStateFlow(AparienciaApp())
+    override val apariencia: Flow<AparienciaApp> = aparienciaState
+    override suspend fun saveApariencia(apariencia: AparienciaApp) { aparienciaState.value = apariencia }
 }
 
 class FakePauseScheduler : PauseScheduler {

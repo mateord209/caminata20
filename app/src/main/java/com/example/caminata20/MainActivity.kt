@@ -6,15 +6,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.caminata20.data.migration.LegacyDataMigrator
 import com.example.caminata20.di.ApplicationScope
 import com.example.caminata20.domain.model.AparienciaApp
 import com.example.caminata20.domain.model.TemaApp
 import com.example.caminata20.domain.repository.AuthRepository
+import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.ui.BreakeeApp
 import com.example.caminata20.ui.theme.BreakeeTheme
@@ -28,6 +31,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject lateinit var auth: AuthRepository
     @Inject lateinit var prefs: PreferencesRepository
+    @Inject lateinit var local: LocalStateRepository
     @Inject lateinit var migrator: LegacyDataMigrator
     @Inject @ApplicationScope lateinit var appScope: CoroutineScope
 
@@ -38,11 +42,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         deepLink = intent.getStringExtra(EXTRA_ROUTE)
         setContent {
-            val apariencia by prefs.apariencia.collectAsStateWithLifecycle(initialValue = AparienciaApp())
+            // HU-13: la apariencia se lee de DataStore local (funciona sin sesión).
+            val apariencia by local.apariencia.collectAsStateWithLifecycle(initialValue = AparienciaApp())
             val dark = when (apariencia.tema) {
                 TemaApp.CLARO -> false
                 TemaApp.OSCURO -> true
                 TemaApp.SISTEMA -> isSystemInDarkTheme()
+            }
+            LaunchedEffect(dark) {
+                val controller = WindowCompat.getInsetsController(window, window.decorView)
+                controller.isAppearanceLightStatusBars = !dark
+                controller.isAppearanceLightNavigationBars = !dark
             }
             BreakeeTheme(darkTheme = dark, textScale = apariencia.escalaTexto.factor) {
                 BreakeeApp(

@@ -1,15 +1,18 @@
 package com.example.caminata20.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -17,9 +20,8 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -51,8 +53,10 @@ fun BottomNavBar(currentRoute: String?, onSelect: (BreakeeTab) -> Unit, modifier
     }
 }
 
-/** Encabezado con sobrelínea con la marca ("BREAKEE") + título grande, y botón atrás opcional. */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Encabezado con sobrelínea con la marca ("BREAKEE") + título grande, y botón atrás opcional.
+ * HU-19: altura mínima de 64 dp que crece con el texto (sin recortes a 140 %).
+ */
 @Composable
 fun TopBar(
     title: String,
@@ -61,25 +65,30 @@ fun TopBar(
     onBack: (() -> Unit)? = null,
     actions: @Composable () -> Unit = {},
 ) {
-    TopAppBar(
-        modifier = modifier,
-        title = {
-            Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                if (overline != null) {
-                    Text(overline, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                }
-                Text(title, style = MaterialTheme.typography.headlineMedium)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .heightIn(min = 64.dp)
+            .padding(horizontal = 4.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (onBack != null) {
+            IconButton(onClick = onBack) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
             }
-        },
-        navigationIcon = {
-            if (onBack != null) {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás") }
+        }
+        Column(
+            Modifier
+                .weight(1f)
+                .padding(start = if (onBack != null) 8.dp else 12.dp, end = 8.dp),
+        ) {
+            if (overline != null) {
+                Text(overline, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
             }
-        },
-        actions = { actions() },
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background,
-            titleContentColor = MaterialTheme.colorScheme.onBackground,
-        ),
-    )
+            Text(title, style = MaterialTheme.typography.headlineMedium)
+        }
+        actions()
+    }
 }

@@ -2,11 +2,15 @@ package com.example.caminata20.ui
 
 import com.example.caminata20.MainDispatcherRule
 import com.example.caminata20.domain.model.AiExercise
+import com.example.caminata20.domain.model.AparienciaApp
 import com.example.caminata20.domain.model.AuthUser
+import com.example.caminata20.domain.model.EscalaTexto
 import com.example.caminata20.domain.model.Outcome
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.model.ReminderScheduleConfig
+import com.example.caminata20.domain.model.TemaApp
 import com.example.caminata20.domain.model.WalkSession
 import com.example.caminata20.domain.usecase.Clock
 import com.example.caminata20.domain.usecase.FraseMotivacionalUseCase
@@ -29,13 +33,16 @@ import com.example.caminata20.ui.auth.ForgotPasswordViewModel
 import com.example.caminata20.ui.auth.LoginViewModel
 import com.example.caminata20.ui.auth.RegisterViewModel
 import com.example.caminata20.ui.home.HomeViewModel
+import com.example.caminata20.ui.myday.HistoryRange
 import com.example.caminata20.ui.myday.MyDayViewModel
 import com.example.caminata20.ui.onboarding.OnboardingViewModel
 import com.example.caminata20.ui.pausetype.PauseTypeViewModel
 import com.example.caminata20.ui.profile.ProfileViewModel
 import com.example.caminata20.ui.reminder.ReminderViewModel
+import com.example.caminata20.ui.settings.SettingsViewModel
 import com.example.caminata20.ui.splash.SplashDestination
 import com.example.caminata20.ui.splash.SplashViewModel
+import com.example.caminata20.ui.stats.StatsViewModel
 import com.example.caminata20.ui.walk.WalkHistoryViewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -46,6 +53,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -53,6 +61,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import java.util.Calendar
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ViewModelsTest {
@@ -190,6 +199,74 @@ class ViewModelsTest {
         assertEquals(4, vm.state.value.totalMinutes)
     }
 
+    // ---------- HU-04 / HU-09 (Mi Día) ----------
+    @Test
+    fun `HU-04 la vista semanal solo lista completadas de los ultimos 7 dias`() = runTest {
+        // FakePauseHistoryRepository.today devuelve todos los ítems, así que sembramos
+        // timestamps reales para validar el filtro de 7 días sobre `records`.
+        val history = FakePauseHistoryRepository()
+        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState())
+        keep(vm.state)
+        val now = System.currentTimeMillis()
+        val day = 86_400_000L
+        history.add(PauseRecord(now, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
+        history.add(PauseRecord(now - 2 * day, PauseType.HIDRATACION, PauseStatus.COMPLETADA))
+        history.add(PauseRecord(now - 5 * day, PauseType.RESPIRACION, PauseStatus.COMPLETADA))
+        history.add(PauseRecord(now - 8 * day, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
+        history.add(PauseRecord(now - 2 * day, PauseType.DESCANSO_VISUAL, PauseStatus.POSPUESTA))
+
+        vm.setRange(HistoryRange.SEMANA)
+
+        assertEquals(HistoryRange.SEMANA, vm.state.value.range)
+        assertEquals(3, vm.state.value.visibleRecords.size)
+        assertTrue(vm.state.value.visibleRecords.all { it.status == PauseStatus.COMPLETADA })
+        assertFalse(vm.state.value.visibleRecords.any { it.type == PauseType.DESCANSO_VISUAL })
+    }
+
+    @Test
+    fun `HU-04 cambiar de rango conserva el historial completado del dia`() = runTest {
+        val history = FakePauseHistoryRepository()
+        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState())
+        keep(vm.state)
+        val now = System.currentTimeMillis()
+        history.add(PauseRecord(now, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
+        history.add(PauseRecord(now + 1, PauseType.HIDRATACION, PauseStatus.POSPUESTA))
+
+        assertEquals(1, vm.state.value.todayRecords.size)
+        assertTrue(vm.state.value.todayRecords.all { it.status == PauseStatus.COMPLETADA })
+
+        vm.setRange(HistoryRange.SEMANA)
+        vm.setRange(HistoryRange.DIA)
+
+        assertEquals(HistoryRange.DIA, vm.state.value.range)
+        assertEquals(1, vm.state.value.visibleRecords.size)
+        assertEquals(1, vm.state.value.todayRecords.size)
+    }
+
+    @Test
+    fun `HU-09 el filtro por categoria convive con el rango de mi dia`() = runTest {
+        val history = FakePauseHistoryRepository()
+        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState())
+        keep(vm.state)
+        val now = System.currentTimeMillis()
+        history.add(PauseRecord(now - 3_000, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
+        history.add(PauseRecord(now - 2_000, PauseType.HIDRATACION, PauseStatus.COMPLETADA))
+        history.add(PauseRecord(now - 1_000, PauseType.HIDRATACION, PauseStatus.POSPUESTA))
+
+        assertEquals(2, vm.state.value.visibleRecords.size)
+
+        vm.onFilterType(PauseType.HIDRATACION)
+        assertEquals(PauseType.HIDRATACION, vm.state.value.typeFilter)
+        assertEquals(1, vm.state.value.visibleRecords.size)
+        assertEquals(PauseStatus.COMPLETADA, vm.state.value.visibleRecords.single().status)
+
+        vm.setRange(HistoryRange.SEMANA)
+        assertEquals(1, vm.state.value.visibleRecords.size)
+
+        vm.onFilterType(null)
+        assertEquals(2, vm.state.value.visibleRecords.size)
+    }
+
     // ---------- HU-03 ----------
     @Test
     fun `alertas muestran advertencia tras mas de 3 posposiciones`() = runTest {
@@ -300,6 +377,113 @@ class ViewModelsTest {
         assertEquals("Error al generar la rutina: x", vm.state.value.message)
         assertNull(vm.state.value.current)
         assertTrue(routines.items.value.isEmpty())
+    }
+
+    // ---------- HU-09 / HU-18 (Estadísticas) ----------
+    @Test
+    fun `HU-09 el historial de estadisticas ordena y filtra por categoria`() = runTest {
+        val history = FakePauseHistoryRepository()
+        val vm = StatsViewModel(FakeProfileRepository(), history, FakePreferencesRepository())
+        keep(vm.state)
+        val now = System.currentTimeMillis()
+        history.add(PauseRecord(now - 3_000, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
+        history.add(PauseRecord(now - 2_000, PauseType.HIDRATACION, PauseStatus.COMPLETADA))
+        history.add(PauseRecord(now - 1_000, PauseType.HIDRATACION, PauseStatus.POSPUESTA))
+
+        assertEquals(
+            listOf(PauseType.HIDRATACION, PauseType.ESTIRAMIENTO),
+            vm.state.value.history.map { it.type },
+        )
+
+        vm.onFilterType(PauseType.HIDRATACION)
+        assertEquals(1, vm.state.value.history.size)
+        assertEquals(PauseType.HIDRATACION, vm.state.value.history.single().type)
+
+        vm.onFilterType(null)
+        assertEquals(2, vm.state.value.history.size)
+    }
+
+    @Test
+    fun `HU-18 estadisticas calculan total y porcentaje semanal agregado`() = runTest {
+        val prefs = FakePreferencesRepository()
+        prefs.scheduleState.value = ReminderScheduleConfig(
+            activeDays = setOf(
+                Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY,
+                Calendar.THURSDAY, Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY,
+            ),
+        )
+        val history = FakePauseHistoryRepository()
+        val vm = StatsViewModel(FakeProfileRepository(), history, prefs)
+        keep(vm.state)
+        val now = System.currentTimeMillis()
+        repeat(40) { history.add(PauseRecord(now, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA)) }
+
+        assertEquals(40, vm.state.value.weeklyCompleted)
+        assertEquals(56, vm.state.value.weeklyExpected)
+        assertEquals(71, vm.state.value.weeklyPercent)
+        assertTrue(vm.state.value.shareText.contains("40 de 56 pausas"))
+        assertTrue(vm.state.value.shareText.contains("71%"))
+    }
+
+    // ---------- HU-13 / HU-19 (Apariencia) ----------
+    @Test
+    fun `HU-13 cambiar tema persiste de inmediato en local`() = runTest {
+        val prefs = FakePreferencesRepository(); val local = FakeLocalState()
+        val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
+        val vm = SettingsViewModel(prefs, local, sync)
+        advanceUntilIdle()
+
+        vm.setTheme(TemaApp.OSCURO)
+        advanceUntilIdle()
+
+        assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
+        assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
+        assertEquals(TemaApp.OSCURO, prefs.aparienciaState.value.tema)
+        assertFalse(vm.state.value.saved) // no se llamó save()
+    }
+
+    @Test
+    fun `HU-13 cambiar escala de texto persiste de inmediato en local`() = runTest {
+        val prefs = FakePreferencesRepository(); val local = FakeLocalState()
+        val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
+        val vm = SettingsViewModel(prefs, local, sync)
+        advanceUntilIdle()
+
+        vm.setTextScale(EscalaTexto.EXTRA_GRANDE)
+        advanceUntilIdle()
+
+        assertEquals(EscalaTexto.EXTRA_GRANDE, vm.state.value.apariencia.escalaTexto)
+        assertEquals(EscalaTexto.EXTRA_GRANDE, local.aparienciaState.value.escalaTexto)
+        assertFalse(vm.state.value.saved)
+    }
+
+    @Test
+    fun `HU-13 carga la apariencia local al iniciar`() = runTest {
+        val prefs = FakePreferencesRepository()
+        val local = FakeLocalState().apply {
+            aparienciaState.value = AparienciaApp(TemaApp.OSCURO, EscalaTexto.GRANDE)
+        }
+        val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
+        val vm = SettingsViewModel(prefs, local, sync)
+        advanceUntilIdle()
+
+        assertEquals(AparienciaApp(TemaApp.OSCURO, EscalaTexto.GRANDE), vm.state.value.apariencia)
+    }
+
+    @Test
+    fun `HU-13 adopta la apariencia remota solo si local esta en defaults`() = runTest {
+        val prefs = FakePreferencesRepository().apply {
+            aparienciaState.value = AparienciaApp(TemaApp.OSCURO, EscalaTexto.GRANDE)
+        }
+        val local = FakeLocalState()
+        val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
+        val vm = SettingsViewModel(prefs, local, sync)
+        advanceUntilIdle()
+
+        assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
+        assertEquals(EscalaTexto.GRANDE, vm.state.value.apariencia.escalaTexto)
+        assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
+        assertEquals(EscalaTexto.GRANDE, local.aparienciaState.value.escalaTexto)
     }
 
     // ---------- Recordatorio ----------

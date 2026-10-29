@@ -106,4 +106,8 @@ interface LocalStateRepository {
     suspend fun setLastPhraseIndex(index: Int)
     suspend fun lastPhraseAt(): Long?
     suspend fun setLastPhraseAt(at: Long)
+
+    /** HU-13: apariencia aplicada al instante y persistida en el dispositivo. */
+    val apariencia: Flow<AparienciaApp>
+    suspend fun saveApariencia(apariencia: AparienciaApp)
 }

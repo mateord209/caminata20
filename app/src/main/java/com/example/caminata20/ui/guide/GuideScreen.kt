@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,6 +41,7 @@ import com.example.caminata20.ui.components.SelectableChip
 import com.example.caminata20.ui.components.TopBar
 
 /** HU-16: pantalla guía del ejercicio (se abre desde la notificación o desde Mi Día). */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun GuideScreen(exerciseId: String?, onBack: () -> Unit, vm: GuideViewModel = hiltViewModel()) {
     LaunchedEffect(exerciseId) { vm.load(exerciseId) }
@@ -55,7 +58,10 @@ fun GuideScreen(exerciseId: String?, onBack: () -> Unit, vm: GuideViewModel = hi
                 Modifier.fillMaxWidth().height(180.dp).background(cs.secondaryContainer, RoundedCornerShape(28.dp)),
                 contentAlignment = Alignment.Center,
             ) { PauseTypeIcon(ex.type, size = 120.dp, container = cs.secondaryContainer) }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 SelectableChip(ex.durationLabel, selected = true, onClick = {})
                 SelectableChip(ex.area, selected = false, onClick = {})
                 SelectableChip(ex.level, selected = false, onClick = {})

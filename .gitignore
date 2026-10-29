@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Documento privado de historias de usuario (no se sube)
+/docs/HU-PausaActiva-Breakee.pdf
