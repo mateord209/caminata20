@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.caminata20.data.local.ExerciseCatalog
 import com.example.caminata20.domain.model.Exercise
+import com.example.caminata20.domain.model.ExerciseVisual
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.repository.PauseHistoryRepository
@@ -20,6 +21,8 @@ import kotlinx.coroutines.launch
 
 data class GuideUiState(
     val exercise: Exercise? = null,
+    /** HU-16 CA-03: gráfico explicativo del ejercicio. */
+    val visual: ExerciseVisual = ExerciseVisual.ARM_STRETCH,
     val remainingSec: Int = 0,
     val running: Boolean = false,
     val completed: Boolean = false,
@@ -48,7 +51,7 @@ class GuideViewModel @Inject constructor(
     fun load(id: String?) {
         if (_state.value.exercise != null) return
         val ex = ExerciseCatalog.byId(id) ?: ExerciseCatalog.all.first()
-        _state.value = GuideUiState(ex, ex.durationSec)
+        _state.value = GuideUiState(ex, ExerciseCatalog.visualFor(ex), ex.durationSec)
         start()
     }
 

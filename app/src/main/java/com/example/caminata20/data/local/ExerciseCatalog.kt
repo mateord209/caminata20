@@ -1,6 +1,7 @@
 package com.example.caminata20.data.local
 
 import com.example.caminata20.domain.model.Exercise
+import com.example.caminata20.domain.model.ExerciseVisual
 import com.example.caminata20.domain.model.PauseType
 
 /** HU-16: catálogo local (12 ejercicios por tipo de pausa, 48 en total). */
@@ -65,5 +66,30 @@ object ExerciseCatalog {
         val list = byType(type)
         val idx = list.indexOfFirst { it.id == lastId }
         return list[(idx + 1).mod(list.size)]
+    }
+
+    /** HU-16 CA-03: gráfico explicativo de cada ejercicio (por id; fallback por tipo). */
+    private val visuals: Map<String, ExerciseVisual> = mapOf(
+        "est_01" to ExerciseVisual.NECK_TILT, "est_02" to ExerciseVisual.SHOULDER_ROLL,
+        "est_03" to ExerciseVisual.ARM_STRETCH, "est_04" to ExerciseVisual.TORSO_TWIST,
+        "est_05" to ExerciseVisual.ARM_STRETCH, "est_06" to ExerciseVisual.SIDE_BEND,
+        "est_07" to ExerciseVisual.ARM_STRETCH, "est_08" to ExerciseVisual.FORWARD_BEND,
+        "est_09" to ExerciseVisual.LEG_STRETCH, "est_10" to ExerciseVisual.LEG_STRETCH,
+        "est_11" to ExerciseVisual.FORWARD_BEND, "est_12" to ExerciseVisual.LEG_STRETCH,
+        "vis_01" to ExerciseVisual.EYE_DISTANCE, "vis_02" to ExerciseVisual.EYES_CLOSED,
+        "vis_03" to ExerciseVisual.EYES_CLOSED, "vis_04" to ExerciseVisual.EYE_DISTANCE,
+        "vis_05" to ExerciseVisual.EYE_MOVE, "vis_06" to ExerciseVisual.EYE_MOVE,
+        "vis_07" to ExerciseVisual.EYE_DISTANCE, "vis_08" to ExerciseVisual.EYES_CLOSED,
+        "vis_09" to ExerciseVisual.EYE_MOVE, "vis_10" to ExerciseVisual.EYE_MOVE,
+        "vis_11" to ExerciseVisual.EYES_CLOSED, "vis_12" to ExerciseVisual.EYE_DISTANCE,
+        "res_07" to ExerciseVisual.SHOULDER_ROLL, "res_12" to ExerciseVisual.ARM_STRETCH,
+        "hid_03" to ExerciseVisual.ARM_STRETCH, "hid_07" to ExerciseVisual.LEG_STRETCH,
+    )
+
+    fun visualFor(exercise: Exercise): ExerciseVisual = visuals[exercise.id] ?: when (exercise.type) {
+        PauseType.ESTIRAMIENTO -> ExerciseVisual.ARM_STRETCH
+        PauseType.DESCANSO_VISUAL -> ExerciseVisual.EYE_DISTANCE
+        PauseType.RESPIRACION -> ExerciseVisual.BREATH
+        PauseType.HIDRATACION -> ExerciseVisual.WATER
     }
 }
