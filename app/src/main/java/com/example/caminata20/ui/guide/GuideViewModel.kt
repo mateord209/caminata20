@@ -50,7 +50,7 @@ class GuideViewModel @Inject constructor(
 
     fun load(id: String?) {
         if (_state.value.exercise != null) return
-        val ex = ExerciseCatalog.byId(id) ?: ExerciseCatalog.all.first()
+        val ex = ExerciseCatalog.byId(id) ?: ExerciseCatalog.all.random()
         _state.value = GuideUiState(ex, ExerciseCatalog.visualFor(ex), ex.durationSec)
         start()
     }

@@ -3,6 +3,7 @@ package com.example.caminata20.data.local
 import com.example.caminata20.domain.model.Exercise
 import com.example.caminata20.domain.model.ExerciseVisual
 import com.example.caminata20.domain.model.PauseType
+import kotlin.random.Random
 
 /** HU-16: catálogo local (≥12 ejercicios por tipo de pausa; Estiramiento incluye 10 básicos con stickman). */
 object ExerciseCatalog {
@@ -72,11 +73,25 @@ object ExerciseCatalog {
 
     fun byId(id: String?): Exercise? = all.firstOrNull { it.id == id }
 
-    /** Rota por el catálogo del tipo para no repetir el mismo ejercicio. */
-    fun next(type: PauseType, lastId: String?): Exercise {
+    /** Últimos ejercicios sugeridos (en memoria) para no repetir los recientes. */
+    private val recent = ArrayDeque<String>()
+    private const val RECENT_SIZE = 3
+
+    /** Ejercicio aleatorio del tipo, evitando los ids de [exclude] (si quedan opciones). */
+    fun random(type: PauseType, exclude: Collection<String?> = emptyList(), rnd: Random = Random.Default): Exercise {
         val list = byType(type)
-        val idx = list.indexOfFirst { it.id == lastId }
-        return list[(idx + 1).mod(list.size)]
+        val candidates = list.filter { it.id !in exclude }.ifEmpty { list.filter { it.id != exclude.lastOrNull() } }.ifEmpty { list }
+        return candidates.random(rnd)
+    }
+
+    /** Siguiente sugerencia: aleatoria dentro del tipo, nunca igual a [lastId] y evitando las últimas. */
+    @Synchronized
+    fun next(type: PauseType, lastId: String?, rnd: Random = Random.Default): Exercise {
+        val exclude = recent.toList() + lastId
+        val ex = random(type, exclude, rnd).takeIf { it.id != lastId } ?: random(type, listOf(lastId), rnd)
+        recent.addLast(ex.id)
+        while (recent.size > RECENT_SIZE) recent.removeFirst()
+        return ex
     }
 
     /** HU-16 CA-03: gráfico explicativo de cada ejercicio (por id; fallback por tipo). */

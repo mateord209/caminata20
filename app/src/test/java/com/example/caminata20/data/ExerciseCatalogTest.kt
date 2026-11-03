@@ -50,6 +50,33 @@ class ExerciseCatalogTest {
         assertTrue(usados.containsAll(listOf(ExerciseVisual.TRICEPS, ExerciseVisual.QUAD_STAND, ExerciseVisual.HEEL_RAISE)))
     }
 
+    @Test fun `next nunca repite inmediatamente y se queda en el tipo`() {
+        val rnd = kotlin.random.Random(42)
+        PauseType.entries.forEach { type ->
+            var last: String? = null
+            val vistos = mutableSetOf<String>()
+            repeat(200) {
+                val ex = ExerciseCatalog.next(type, last, rnd)
+                assertEquals(type, ex.type)
+                assertNotEquals(last, ex.id)
+                vistos += ex.id; last = ex.id
+            }
+            assertTrue("variedad en $type", vistos.size >= 8)
+        }
+    }
+
+    @Test fun `random respeta exclusiones y el tipo`() {
+        val rnd = kotlin.random.Random(7)
+        val excl = ExerciseCatalog.byType(PauseType.HIDRATACION).take(11).map { it.id }
+        repeat(50) {
+            val ex = ExerciseCatalog.random(PauseType.HIDRATACION, excl, rnd)
+            assertEquals(PauseType.HIDRATACION, ex.type); assertTrue(ex.id !in excl)
+        }
+        // si se excluyen todos, igual devuelve uno del tipo
+        val todos = ExerciseCatalog.byType(PauseType.RESPIRACION).map { it.id }
+        assertEquals(PauseType.RESPIRACION, ExerciseCatalog.random(PauseType.RESPIRACION, todos, rnd).type)
+    }
+
     @Test fun `next rota dentro del tipo elegido`() {
         val a = ExerciseCatalog.next(PauseType.RESPIRACION, null)
         val b = ExerciseCatalog.next(PauseType.RESPIRACION, a.id)

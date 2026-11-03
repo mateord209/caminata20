@@ -13,6 +13,7 @@ import com.example.caminata20.domain.repository.PauseHistoryRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.domain.repository.ProfileRepository
 import com.example.caminata20.domain.usecase.RachaDiariaUseCase
+import com.example.caminata20.domain.usecase.SuggestedExercise
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import java.util.Calendar
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** HU-04: rango del historial (día actual o últimos 7 días). */
@@ -54,9 +56,21 @@ data class MyDayUiState(
 class MyDayViewModel @Inject constructor(
     profile: ProfileRepository,
     history: PauseHistoryRepository,
-    prefs: PreferencesRepository,
-    local: LocalStateRepository,
+    private val prefs: PreferencesRepository,
+    private val local: LocalStateRepository,
 ) : ViewModel() {
+    init {
+        // HU-16: al abrir o al cambiar el tipo de pausa, garantiza un ejercicio válido (aleatorio) y persistido
+        viewModelScope.launch {
+            combine(prefs.pauseSettings, local.lastExerciseId) { s, id -> s.type to id }
+                .collect { (type, id) -> // se lee el tipo actual (no el emitido) para no competir con otra pantalla con un valor viejo
+                    if (SuggestedExercise.current(id, type) == null) SuggestedExercise.ensure(local, prefs.current().type) }
+        }
+    }
+
+    /** HU-16: botón "Otro ejercicio". */
+    fun shuffle() = viewModelScope.launch { SuggestedExercise.shuffle(local, prefs.current().type) }
+
     private val range = MutableStateFlow(HistoryRange.DIA)
     private val typeFilter = MutableStateFlow<PauseType?>(null)
     private val historyFilters = combine(typeFilter, range) { type, selectedRange -> type to selectedRange }
@@ -90,8 +104,7 @@ class MyDayViewModel @Inject constructor(
             weekRecords = weekRecords,
             range = selectedRange,
             typeFilter = filter,
-            suggested = ExerciseCatalog.byId(lastId)?.takeIf { it.type == settings.type }
-                ?: ExerciseCatalog.byType(settings.type).first(),
+            suggested = SuggestedExercise.current(lastId, settings.type),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MyDayUiState())
 

@@ -1,5 +1,8 @@
 package com.example.caminata20.ui.myday
 
+import androidx.compose.foundation.layout.height
+import com.example.caminata20.ui.components.SecondaryButton
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -82,7 +85,7 @@ fun MyDayScreen(onOpenProfile: () -> Unit, onStartExercise: (String) -> Unit = {
             }
             state.suggested?.let { ex ->
                 Text("Ejercicio sugerido", style = MaterialTheme.typography.titleLarge)
-                BreakeeCard {
+                BreakeeCard(onClick = { onStartExercise(ex.id) }) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         PauseTypeIcon(ex.type)
                         Spacer(Modifier.width(12.dp))
@@ -92,6 +95,14 @@ fun MyDayScreen(onOpenProfile: () -> Unit, onStartExercise: (String) -> Unit = {
                         }
                         PrimaryButton("Iniciar", onClick = { onStartExercise(ex.id) })
                     }
+                    Spacer(Modifier.height(8.dp))
+                    // HU-16: cambiar por otro ejercicio del mismo tipo
+                    SecondaryButton(
+                        text = "Otro ejercicio",
+                        icon = Icons.Filled.Shuffle,
+                        onClick = vm::shuffle,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
