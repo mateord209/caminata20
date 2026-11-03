@@ -32,6 +32,24 @@ class ExerciseCatalogTest {
         assertEquals(ExerciseVisual.BREATH, ExerciseCatalog.visualFor(ExerciseCatalog.byId("res_01")!!))
     }
 
+    @Test fun `estiramiento incluye 10 basicos con stickman propio`() {
+        val basicos = (13..22).map { ExerciseCatalog.byId("est_%02d".format(it))!! }
+        basicos.forEach { assertEquals(PauseType.ESTIRAMIENTO, it.type); assertTrue(it.steps.size in 3..4) }
+        val visuales = basicos.map(ExerciseCatalog::visualFor)
+        assertEquals(10, visuales.toSet().size)
+        val antiguos = setOf(ExerciseVisual.NECK_TILT, ExerciseVisual.SHOULDER_ROLL, ExerciseVisual.ARM_STRETCH, ExerciseVisual.SIDE_BEND,
+            ExerciseVisual.TORSO_TWIST, ExerciseVisual.FORWARD_BEND, ExerciseVisual.LEG_STRETCH)
+        assertTrue(visuales.none { it in antiguos })
+        assertEquals(22, ExerciseCatalog.byType(PauseType.ESTIRAMIENTO).size)
+        assertEquals(58, ExerciseCatalog.all.size)
+    }
+
+    @Test fun `todos los ejercicios tienen un grafico asignado`() {
+        ExerciseCatalog.all.forEach { ExerciseCatalog.visualFor(it) }
+        val usados = ExerciseCatalog.all.map(ExerciseCatalog::visualFor).toSet()
+        assertTrue(usados.containsAll(listOf(ExerciseVisual.TRICEPS, ExerciseVisual.QUAD_STAND, ExerciseVisual.HEEL_RAISE)))
+    }
+
     @Test fun `next rota dentro del tipo elegido`() {
         val a = ExerciseCatalog.next(PauseType.RESPIRACION, null)
         val b = ExerciseCatalog.next(PauseType.RESPIRACION, a.id)
