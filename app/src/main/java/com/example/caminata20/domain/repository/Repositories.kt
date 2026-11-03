@@ -98,6 +98,8 @@ interface LocalStateRepository {
 
     val meetingUntil: Flow<Long?>
     suspend fun setMeetingUntil(until: Long?)
+    /** Inicio (00:00) de los días en que se usó el Modo reunión; no rompen la racha. */
+    val meetingDays: Flow<Set<Long>>
 
     suspend fun cachedHidratacion(): ConfigHidratacion?
     suspend fun cacheHidratacion(config: ConfigHidratacion)

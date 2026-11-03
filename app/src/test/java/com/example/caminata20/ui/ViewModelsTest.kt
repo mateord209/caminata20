@@ -383,7 +383,7 @@ class ViewModelsTest {
     @Test
     fun `HU-09 el historial de estadisticas ordena y filtra por categoria`() = runTest {
         val history = FakePauseHistoryRepository()
-        val vm = StatsViewModel(FakeProfileRepository(), history, FakePreferencesRepository())
+        val vm = StatsViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState())
         keep(vm.state)
         val now = System.currentTimeMillis()
         history.add(PauseRecord(now - 3_000, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
@@ -413,7 +413,7 @@ class ViewModelsTest {
             ),
         )
         val history = FakePauseHistoryRepository()
-        val vm = StatsViewModel(FakeProfileRepository(), history, prefs)
+        val vm = StatsViewModel(FakeProfileRepository(), history, prefs, FakeLocalState())
         keep(vm.state)
         val now = System.currentTimeMillis()
         repeat(40) { history.add(PauseRecord(now, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA)) }

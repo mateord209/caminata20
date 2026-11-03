@@ -67,9 +67,10 @@ class MyDayViewModel @Inject constructor(
         },
         prefs.pauseSettings,
         prefs.reminderSchedule,
-        local.lastExerciseId,
+        combine(local.lastExerciseId, local.meetingDays) { id, days -> id to days },
         historyFilters,
-    ) { triple, settings, schedule, lastId, filters ->
+    ) { triple, settings, schedule, lastAndMeeting, filters ->
+        val (lastId, meetingDays) = lastAndMeeting
         val (p, all, today) = triple
         val (filter, selectedRange) = filters
         val completedToday = today
@@ -84,7 +85,7 @@ class MyDayViewModel @Inject constructor(
             completed = completedToday.size,
             goal = p.dailyGoal,
             totalMinutes = completedToday.size * settings.durationMin,
-            streak = RachaDiariaUseCase.calcular(all, p.dailyGoal, schedule.activeDays),
+            streak = RachaDiariaUseCase.calcular(all, p.dailyGoal, schedule.activeDays, diasReunion = meetingDays),
             todayRecords = completedToday,
             weekRecords = weekRecords,
             range = selectedRange,

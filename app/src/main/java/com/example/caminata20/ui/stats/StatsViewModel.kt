@@ -6,6 +6,7 @@ import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
 import com.example.caminata20.domain.repository.PauseHistoryRepository
+import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.domain.repository.ProfileRepository
 import com.example.caminata20.domain.usecase.DiaCumplimiento
@@ -38,6 +39,7 @@ class StatsViewModel @Inject constructor(
     profile: ProfileRepository,
     history: PauseHistoryRepository,
     prefs: PreferencesRepository,
+    local: LocalStateRepository,
 ) : ViewModel() {
     private val typeFilter = MutableStateFlow<PauseType?>(null)
 
@@ -46,9 +48,10 @@ class StatsViewModel @Inject constructor(
         history.records,
         prefs.reminderSchedule,
         typeFilter,
-    ) { perfil, registros, schedule, filter ->
+        local.meetingDays,
+    ) { perfil, registros, schedule, filter, meetingDays ->
         val weekly = EstadisticasSemanalesUseCase.calcular(registros, perfil.dailyGoal, schedule.activeDays)
-        val streak = RachaDiariaUseCase.calcular(registros, perfil.dailyGoal, schedule.activeDays)
+        val streak = RachaDiariaUseCase.calcular(registros, perfil.dailyGoal, schedule.activeDays, diasReunion = meetingDays)
         val allHistory = registros
             .filter { it.status == PauseStatus.COMPLETADA }
             .sortedByDescending { it.timestamp }
