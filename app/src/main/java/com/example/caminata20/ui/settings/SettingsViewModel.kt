@@ -11,6 +11,7 @@ import com.example.caminata20.domain.model.ScheduleProfilesState
 import com.example.caminata20.domain.model.TemaApp
 import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
+import com.example.caminata20.domain.usecase.MarkMeetingDayUseCase
 import com.example.caminata20.domain.usecase.PauseScheduleSync
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +39,7 @@ class SettingsViewModel @Inject constructor(
     private val prefs: PreferencesRepository,
     private val local: LocalStateRepository,
     private val scheduleSync: PauseScheduleSync,
+    private val markMeetingDay: MarkMeetingDayUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(SettingsUiState())
     val state: StateFlow<SettingsUiState> = _state.asStateFlow()
@@ -130,7 +132,10 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun enableMeeting(minutes: Int) = viewModelScope.launch {
-        local.setMeetingUntil(System.currentTimeMillis() + minutes * 60_000L)
+        val now = System.currentTimeMillis()
+        val until = now + minutes * 60_000L
+        local.setMeetingUntil(until)
+        markMeetingDay(now, until)
         scheduleSync.syncPauseTimers()
         _state.update { it.copy(message = "Modo reunión activado", meetingActive = true) }
     }

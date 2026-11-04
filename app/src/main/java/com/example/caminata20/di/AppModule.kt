@@ -9,6 +9,8 @@ import com.example.caminata20.data.remote.IdTokenProvider
 import kotlinx.coroutines.tasks.await
 import com.example.caminata20.data.repository.FirebaseAuthRepository
 import com.example.caminata20.data.repository.FirestoreAiRoutineRepository
+import com.example.caminata20.data.repository.FirestoreGoalHistoryRepository
+import com.example.caminata20.data.repository.FirestoreMeetingDayRepository
 import com.example.caminata20.data.repository.FirestorePauseHistoryRepository
 import com.example.caminata20.data.repository.FirestorePreferencesRepository
 import com.example.caminata20.data.repository.FirestoreProfileRepository
@@ -19,7 +21,9 @@ import com.example.caminata20.data.system.AlarmReminderScheduler
 import com.example.caminata20.domain.repository.AiExerciseGenerator
 import com.example.caminata20.domain.repository.AiRoutineRepository
 import com.example.caminata20.domain.repository.AuthRepository
+import com.example.caminata20.domain.repository.GoalHistoryRepository
 import com.example.caminata20.domain.repository.LocalStateRepository
+import com.example.caminata20.domain.repository.MeetingDayRepository
 import com.example.caminata20.domain.repository.PauseHistoryRepository
 import com.example.caminata20.domain.repository.PauseNotificationGateway
 import com.example.caminata20.domain.repository.PauseScheduler
@@ -46,6 +50,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import javax.inject.Qualifier
 import okhttp3.OkHttpClient
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
@@ -94,6 +99,9 @@ object NetworkModule {
     @Provides
     fun clock(): Clock = Clock { System.currentTimeMillis() }
 
+    @Provides @Singleton
+    fun timeZone(): TimeZone = TimeZone.getDefault()
+
     /** HU-07: aleatoriedad inyectable para elegir la frase de la notificación. */
     @Provides @Singleton
     fun random(): Random = Random.Default
@@ -110,6 +118,8 @@ abstract class RepositoryModule {
     @Binds abstract fun aiRoutines(impl: FirestoreAiRoutineRepository): AiRoutineRepository
     @Binds abstract fun aiGenerator(impl: GroqExerciseGenerator): AiExerciseGenerator
     @Binds abstract fun local(impl: LocalStateRepositoryImpl): LocalStateRepository
+    @Binds abstract fun meetingDays(impl: FirestoreMeetingDayRepository): MeetingDayRepository
+    @Binds abstract fun goalHistory(impl: FirestoreGoalHistoryRepository): GoalHistoryRepository
     @Binds abstract fun phrases(impl: LocalPhraseRepository): PhraseRepository
     @Binds abstract fun phraseState(impl: DataStorePhraseStateStore): PhraseStateStore
     @Binds abstract fun pauseScheduler(impl: AlarmPauseScheduler): PauseScheduler
