@@ -18,6 +18,9 @@ import com.example.caminata20.domain.usecase.Clock
 import com.example.caminata20.domain.usecase.GetPhraseUseCase
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
 import com.example.caminata20.domain.usecase.PauseScheduleSync
+import com.example.caminata20.domain.usecase.RegisterUserUseCase
+import com.example.caminata20.domain.usecase.SignOutUseCase
+import com.example.caminata20.domain.validation.AuthValidator
 import com.example.caminata20.fakes.FakeAiRoutineRepository
 import com.example.caminata20.fakes.FakeAuthRepository
 import com.example.caminata20.fakes.FakeGenerator
@@ -76,16 +79,18 @@ class ViewModelsTest {
     // ---------- Auth ----------
     @Test
     fun `login valida campos vacios`() = runTest {
-        val vm = LoginViewModel(FakeAuthRepository())
+        val vm = LoginViewModel(FakeAuthRepository(), AuthValidator())
         vm.signIn()
-        assertEquals("Completá todos los campos", vm.state.value.message)
+        assertEquals("Ingresá tu correo", vm.state.value.emailError)
+        assertEquals("Ingresá tu contraseña", vm.state.value.passwordError)
+        assertNull(vm.state.value.message)
         assertFalse(vm.state.value.loggedIn)
     }
 
     @Test
     fun `login exitoso recorta espacios y marca loggedIn`() = runTest {
         val auth = FakeAuthRepository()
-        val vm = LoginViewModel(auth)
+        val vm = LoginViewModel(auth, AuthValidator())
         vm.onEmail("  ana@x.com "); vm.onPassword("123456")
         vm.signIn()
         assertEquals("ana@x.com", auth.lastEmail)
@@ -94,41 +99,68 @@ class ViewModelsTest {
 
     @Test
     fun `login fallido muestra el mensaje del repositorio`() = runTest {
-        val vm = LoginViewModel(FakeAuthRepository(Outcome.Failure("Correo o contraseña incorrectos")))
-        vm.onEmail("a@x.com"); vm.onPassword("bad")
+        val vm = LoginViewModel(FakeAuthRepository(Outcome.Failure("Correo o contraseña incorrectos")), AuthValidator())
+        vm.onEmail("a@x.com"); vm.onPassword("badpass")
         vm.signIn()
         assertEquals("Correo o contraseña incorrectos", vm.state.value.message)
         assertFalse(vm.state.value.loading)
     }
 
     @Test
+    fun `login muestra error inline de correo y lo limpia al escribir`() = runTest {
+        val auth = FakeAuthRepository()
+        val vm = LoginViewModel(auth, AuthValidator())
+        vm.onEmail("ana-sin-arroba"); vm.onPassword("123456")
+        vm.signIn()
+        assertEquals("Ingresá un correo válido", vm.state.value.emailError)
+        assertNull(auth.lastEmail)
+        vm.onEmail("ana@x.com")
+        assertNull(vm.state.value.emailError)
+    }
+
+    @Test
     fun `google sin token muestra error`() = runTest {
-        val vm = LoginViewModel(FakeAuthRepository())
+        val vm = LoginViewModel(FakeAuthRepository(), AuthValidator())
         vm.signInWithGoogle(null)
         assertTrue(vm.state.value.message!!.contains("Google"))
     }
 
     @Test
     fun `registro aplica las validaciones originales`() = runTest {
-        val vm = RegisterViewModel(FakeAuthRepository())
+        val auth = FakeAuthRepository()
+        val profile = FakeProfileRepository()
+        val vm = RegisterViewModel(RegisterUserUseCase(auth, profile), AuthValidator())
         vm.onName("Ana123") // filtrado: solo letras
         assertEquals("", vm.state.value.name)
         vm.onName("Ana Pérez"); vm.onEmail("a@x.com"); vm.onPassword("123"); vm.onConfirm("123")
         vm.register()
-        assertEquals("La contraseña debe tener al menos 6 caracteres", vm.state.value.message)
+        assertEquals("La contraseña debe tener al menos 6 caracteres", vm.state.value.passwordError)
         vm.onPassword("123456"); vm.onConfirm("1234567")
         vm.register()
-        assertEquals("Las contraseñas no coinciden", vm.state.value.message)
+        assertEquals("Las contraseñas no coinciden", vm.state.value.confirmError)
         vm.onConfirm("123456")
         vm.register()
         assertTrue(vm.state.value.registered)
+        assertEquals("Ana Pérez" to "a@x.com", profile.ensuredProfile)
     }
 
     @Test
-    fun `recuperar contrasena exige correo`() = runTest {
-        val vm = ForgotPasswordViewModel(FakeAuthRepository())
+    fun `registro exige correo valido`() = runTest {
+        val auth = FakeAuthRepository()
+        val vm = RegisterViewModel(RegisterUserUseCase(auth, FakeProfileRepository()), AuthValidator())
+        vm.onName("Ana"); vm.onEmail("ana@"); vm.onPassword("123456"); vm.onConfirm("123456")
+        vm.register()
+        assertEquals("Ingresá un correo válido", vm.state.value.emailError)
+        assertFalse(vm.state.value.registered)
+    }
+
+    @Test
+    fun `recuperar contrasena exige correo valido`() = runTest {
+        val vm = ForgotPasswordViewModel(FakeAuthRepository(), AuthValidator())
         vm.send()
-        assertEquals("Ingresá tu correo", vm.state.value.message)
+        assertEquals("Ingresá tu correo", vm.state.value.emailError)
+        vm.onEmail("a@x"); vm.send()
+        assertEquals("Ingresá un correo válido", vm.state.value.emailError)
         vm.onEmail("a@x.com"); vm.send()
         assertTrue(vm.state.value.sent)
     }
@@ -176,8 +208,8 @@ class ViewModelsTest {
 
     @Test
     fun `perfil valida nombre, limita la meta y cierra sesion`() = runTest {
-        val repo = FakeProfileRepository(); val auth = FakeAuthRepository()
-        val vm = ProfileViewModel(repo, auth)
+        val repo = FakeProfileRepository(); val auth = FakeAuthRepository(); val local = FakeLocalState()
+        val vm = ProfileViewModel(repo, SignOutUseCase(auth, local, FakePauseScheduler(), FakeReminderScheduler()))
         vm.onNameChange("  "); vm.save()
         assertEquals("El nombre no puede estar vacío", vm.state.value.nameError)
         vm.onGoalChange(40)
@@ -185,6 +217,7 @@ class ViewModelsTest {
         assertEquals(15, repo.state.value.dailyGoal)
         vm.signOut()
         assertTrue(auth.signedOut)
+        assertTrue(local.userStateCleared)
         assertTrue(vm.state.value.signedOut)
     }
 

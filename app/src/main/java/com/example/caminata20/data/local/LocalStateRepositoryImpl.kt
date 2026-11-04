@@ -143,6 +143,23 @@ class LocalStateRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun clearUserScopedState() {
+        store.edit {
+            it.remove(Keys.SNOOZES)
+            it.remove(Keys.LAST_EXERCISE)
+            it.remove(Keys.REMINDER_HOUR)
+            it.remove(Keys.REMINDER_MINUTE)
+            it.remove(Keys.INTERVAL_MIN)
+            it.remove(Keys.ACTIVE_DAYS)
+            it.remove(Keys.MEETING_UNTIL)
+            it.remove(Keys.MEETING_DAYS)
+            it.remove(Keys.HYDRATION_ACTIVE)
+            it.remove(Keys.HYDRATION_INTERVAL)
+            it.remove(Keys.PHRASE_INDEX)
+            it.remove(Keys.PHRASE_AT)
+        }
+    }
+
     companion object {
         fun daysToMask(days: Set<Int>): Int = ReminderScheduleConfig.daysToMask(days)
         fun maskToDays(mask: Int): Set<Int> = ReminderScheduleConfig.maskToDays(mask)

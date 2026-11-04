@@ -57,6 +57,7 @@ import com.example.caminata20.ui.util.showToast
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
 
 /** Cliente de Google Sign-In (mismo flujo que la LoginActivity XML anterior). */
@@ -76,6 +77,7 @@ private fun AuthField(
     icon: ImageVector,
     keyboard: KeyboardType = KeyboardType.Text,
     password: Boolean = false,
+    error: String? = null,
 ) {
     var visible by rememberSaveable { mutableStateOf(false) }
     OutlinedTextField(
@@ -83,6 +85,12 @@ private fun AuthField(
         onValueChange = onChange,
         label = { Text(label) },
         leadingIcon = { Icon(icon, contentDescription = null) },
+        isError = error != null,
+        supportingText = if (error != null) {
+            { Text(error) }
+        } else {
+            null
+        },
         trailingIcon = if (password) {
             {
                 IconButton(onClick = { visible = !visible }) {
@@ -124,7 +132,10 @@ fun LoginScreen(
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
             vm.signInWithGoogle(account.idToken)
         } catch (e: ApiException) {
-            vm.onGoogleError(e.statusCode)
+            // Cancelar el selector de cuentas es una acción del usuario, no un error.
+            if (e.statusCode != GoogleSignInStatusCodes.SIGN_IN_CANCELLED) {
+                vm.onGoogleError(e.statusCode)
+            }
         }
     }
     LaunchedEffect(state.loggedIn) { if (state.loggedIn) onLoggedIn() }
@@ -134,8 +145,8 @@ fun LoginScreen(
         Spacer(Modifier.height(32.dp))
         Image(painterResource(R.drawable.logo_breakee), contentDescription = null, modifier = Modifier.size(110.dp))
         Text("Iniciar sesión", style = MaterialTheme.typography.headlineMedium)
-        AuthField(state.email, vm::onEmail, "Correo", Icons.Filled.Email, KeyboardType.Email)
-        AuthField(state.password, vm::onPassword, "Contraseña", Icons.Filled.Lock, password = true)
+        AuthField(state.email, vm::onEmail, "Correo", Icons.Filled.Email, KeyboardType.Email, error = state.emailError)
+        AuthField(state.password, vm::onPassword, "Contraseña", Icons.Filled.Lock, password = true, error = state.passwordError)
         TextButton(onClick = onForgot, modifier = Modifier.align(Alignment.End)) { Text("¿Olvidaste tu contraseña?") }
         if (state.loading) CircularProgressIndicator()
         PrimaryButton("Ingresar", onClick = vm::signIn, enabled = !state.loading, modifier = Modifier.fillMaxWidth())
@@ -159,10 +170,10 @@ fun RegisterScreen(onRegistered: () -> Unit, onBack: () -> Unit, vm: RegisterVie
     Column(Modifier.fillMaxSize()) {
         TopBar(title = "Crear cuenta", onBack = onBack)
         AuthColumn {
-            AuthField(state.name, vm::onName, "Nombre", Icons.Filled.Person)
-            AuthField(state.email, vm::onEmail, "Correo", Icons.Filled.Email, KeyboardType.Email)
-            AuthField(state.password, vm::onPassword, "Contraseña", Icons.Filled.Lock, password = true)
-            AuthField(state.confirm, vm::onConfirm, "Confirmar contraseña", Icons.Filled.Lock, password = true)
+            AuthField(state.name, vm::onName, "Nombre", Icons.Filled.Person, error = state.nameError)
+            AuthField(state.email, vm::onEmail, "Correo", Icons.Filled.Email, KeyboardType.Email, error = state.emailError)
+            AuthField(state.password, vm::onPassword, "Contraseña", Icons.Filled.Lock, password = true, error = state.passwordError)
+            AuthField(state.confirm, vm::onConfirm, "Confirmar contraseña", Icons.Filled.Lock, password = true, error = state.confirmError)
             if (state.loading) CircularProgressIndicator()
             PrimaryButton("Registrarme", onClick = vm::register, enabled = !state.loading, modifier = Modifier.fillMaxWidth())
             TextButton(onClick = onBack) { Text("¿Ya tenés cuenta? Iniciá sesión") }
@@ -183,7 +194,7 @@ fun ForgotPasswordScreen(onBack: () -> Unit, vm: ForgotPasswordViewModel = hiltV
                 "Ingresá tu correo y te enviaremos un enlace para restablecer la contraseña.",
                 style = MaterialTheme.typography.bodyMedium,
             )
-            AuthField(state.email, vm::onEmail, "Correo", Icons.Filled.Email, KeyboardType.Email)
+            AuthField(state.email, vm::onEmail, "Correo", Icons.Filled.Email, KeyboardType.Email, error = state.emailError)
             if (state.loading) CircularProgressIndicator()
             PrimaryButton("Enviar enlace", onClick = vm::send, enabled = !state.loading, modifier = Modifier.fillMaxWidth())
         }

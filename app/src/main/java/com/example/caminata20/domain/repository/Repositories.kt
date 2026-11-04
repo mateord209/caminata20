@@ -31,6 +31,8 @@ interface ProfileRepository {
     val profile: Flow<Profile>
     suspend fun saveName(name: String)
     suspend fun saveGoal(goal: Int)
+    /** HU-10: crea `users/{uid}` de forma idempotente si el usuario recién se registró. */
+    suspend fun ensureProfile(name: String, email: String)
 }
 
 interface PreferencesRepository {
@@ -107,4 +109,7 @@ interface LocalStateRepository {
     /** HU-13: apariencia aplicada al instante y persistida en el dispositivo. */
     val apariencia: Flow<AparienciaApp>
     suspend fun saveApariencia(apariencia: AparienciaApp)
+
+    /** HU-10: borra solo el estado del usuario; conserva onboarding y apariencia. */
+    suspend fun clearUserScopedState()
 }
