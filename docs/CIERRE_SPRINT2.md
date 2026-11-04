@@ -61,9 +61,10 @@ Flujos Maestro:
 
 ## Evidencia visual
 
-- Login con G vectorial y errores inline.
-- Notificación de pausa con la frase en el subtítulo y en el cuerpo.
-- Dashboard con “Racha actual 1 día”, “Hoy: 3/4” y “En riesgo”.
+- `docs/evidencia/login-google-vector.png`: login con la G vectorial.
+- `docs/evidencia/notificacion-frase.png`: notificación con la frase en el subtítulo y el cuerpo.
+- `docs/evidencia/dashboard-racha-c2.png`: Dashboard con “Racha actual 1 día”, “Hoy: 3/4” y
+  “En riesgo” después de cambiar la meta (C2).
 - Firestore `settings/goalHistory` con `{from: 0, goal: 3}` y `{from: hoy, goal: 4}`.
 
 ## Git
