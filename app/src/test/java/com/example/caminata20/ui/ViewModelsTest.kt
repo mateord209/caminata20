@@ -24,12 +24,14 @@ import com.example.caminata20.domain.usecase.ObserveStreakUseCase
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
 import com.example.caminata20.domain.usecase.PauseScheduleSync
 import com.example.caminata20.domain.usecase.RegisterUserUseCase
+import com.example.caminata20.domain.usecase.SaveGoalUseCase
 import com.example.caminata20.domain.usecase.SignOutUseCase
 import com.example.caminata20.domain.usecase.StreakDayEvaluator
 import com.example.caminata20.domain.validation.AuthValidator
 import com.example.caminata20.fakes.FakeAiRoutineRepository
 import com.example.caminata20.fakes.FakeAuthRepository
 import com.example.caminata20.fakes.FakeGenerator
+import com.example.caminata20.fakes.FakeGoalHistoryRepository
 import com.example.caminata20.fakes.FakeLocalState
 import com.example.caminata20.fakes.FakeMeetingDayRepository
 import com.example.caminata20.fakes.FakeNotifications
@@ -90,8 +92,9 @@ class ViewModelsTest {
         history: FakePauseHistoryRepository = FakePauseHistoryRepository(),
         prefs: FakePreferencesRepository = FakePreferencesRepository(),
         meetings: FakeMeetingDayRepository = FakeMeetingDayRepository(),
+        goals: FakeGoalHistoryRepository = FakeGoalHistoryRepository(),
     ) = ObserveStreakUseCase(
-        profile, history, prefs, meetings, calculateStreakUseCase(), dayWindow, Clock { System.currentTimeMillis() },
+        profile, history, prefs, meetings, goals, calculateStreakUseCase(), dayWindow, Clock { System.currentTimeMillis() },
     )
 
     private fun markMeetingDayUseCase(repo: FakeMeetingDayRepository = FakeMeetingDayRepository()) =
@@ -233,12 +236,20 @@ class ViewModelsTest {
     @Test
     fun `perfil valida nombre, limita la meta y cierra sesion`() = runTest {
         val repo = FakeProfileRepository(); val auth = FakeAuthRepository(); val local = FakeLocalState()
-        val vm = ProfileViewModel(repo, SignOutUseCase(auth, local, FakePauseScheduler(), FakeReminderScheduler(), GetPhraseUseCase(FakePhraseRepository())))
+        val goals = FakeGoalHistoryRepository()
+        val vm = ProfileViewModel(
+            repo,
+            SaveGoalUseCase(repo, goals, dayWindow, Clock { System.currentTimeMillis() }),
+            SignOutUseCase(auth, local, FakePauseScheduler(), FakeReminderScheduler(), GetPhraseUseCase(FakePhraseRepository())),
+        )
         vm.onNameChange("  "); vm.save()
         assertEquals("El nombre no puede estar vacío", vm.state.value.nameError)
         vm.onGoalChange(40)
         assertEquals(15, vm.state.value.goal)
         assertEquals(15, repo.state.value.dailyGoal)
+        assertEquals(1, goals.changes.size)
+        assertEquals(8, goals.changes.single().second)
+        assertEquals(15, goals.changes.single().third)
         vm.signOut()
         assertTrue(auth.signedOut)
         assertTrue(local.userStateCleared)
@@ -248,7 +259,7 @@ class ViewModelsTest {
     @Test
     fun `mi dia recalcula el progreso al cambiar la meta o completar`() = runTest {
         val profile = FakeProfileRepository(); val history = FakePauseHistoryRepository()
-        val vm = MyDayViewModel(profile, history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), calculateStreakUseCase())
+        val vm = MyDayViewModel(profile, history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), FakeGoalHistoryRepository(), calculateStreakUseCase())
         keep(vm.state)
         repeat(2) { history.add(PauseRecord(it.toLong(), PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA)) }
         history.add(PauseRecord(9, PauseType.ESTIRAMIENTO, PauseStatus.POSPUESTA))
@@ -265,7 +276,7 @@ class ViewModelsTest {
         // FakePauseHistoryRepository.today devuelve todos los ítems, así que sembramos
         // timestamps reales para validar el filtro de 7 días sobre `records`.
         val history = FakePauseHistoryRepository()
-        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), calculateStreakUseCase())
+        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), FakeGoalHistoryRepository(), calculateStreakUseCase())
         keep(vm.state)
         val now = System.currentTimeMillis()
         val day = 86_400_000L
@@ -286,7 +297,7 @@ class ViewModelsTest {
     @Test
     fun `HU-04 cambiar de rango conserva el historial completado del dia`() = runTest {
         val history = FakePauseHistoryRepository()
-        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), calculateStreakUseCase())
+        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), FakeGoalHistoryRepository(), calculateStreakUseCase())
         keep(vm.state)
         val now = System.currentTimeMillis()
         history.add(PauseRecord(now, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
@@ -306,7 +317,7 @@ class ViewModelsTest {
     @Test
     fun `HU-09 el filtro por categoria convive con el rango de mi dia`() = runTest {
         val history = FakePauseHistoryRepository()
-        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), calculateStreakUseCase())
+        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), FakeGoalHistoryRepository(), calculateStreakUseCase())
         keep(vm.state)
         val now = System.currentTimeMillis()
         history.add(PauseRecord(now - 3_000, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
@@ -432,7 +443,7 @@ class ViewModelsTest {
         val sync = PauseScheduleSync(prefs, local, scheduler, FakeReminderScheduler())
         val useCase = PauseActionsUseCase(prefs, FakePauseHistoryRepository(), local, scheduler, sync, FakeNotifications(), Clock { 0 })
         val alerts = AlertsViewModel(prefs, local, useCase)
-        val myDay = MyDayViewModel(FakeProfileRepository(), FakePauseHistoryRepository(), prefs, local, FakeMeetingDayRepository(), calculateStreakUseCase())
+        val myDay = MyDayViewModel(FakeProfileRepository(), FakePauseHistoryRepository(), prefs, local, FakeMeetingDayRepository(), FakeGoalHistoryRepository(), calculateStreakUseCase())
         keep(alerts.state); keep(myDay.state)
         prefs.savePauseSettings(PauseType.RESPIRACION, 2)
         assertEquals(PauseType.RESPIRACION, alerts.state.value.type)
@@ -483,7 +494,7 @@ class ViewModelsTest {
     @Test
     fun `HU-09 el historial de estadisticas ordena y filtra por categoria`() = runTest {
         val history = FakePauseHistoryRepository()
-        val vm = StatsViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeMeetingDayRepository(), calculateStreakUseCase())
+        val vm = StatsViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeMeetingDayRepository(), FakeGoalHistoryRepository(), calculateStreakUseCase())
         keep(vm.state)
         val now = System.currentTimeMillis()
         history.add(PauseRecord(now - 3_000, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
@@ -513,7 +524,7 @@ class ViewModelsTest {
             ),
         )
         val history = FakePauseHistoryRepository()
-        val vm = StatsViewModel(FakeProfileRepository(), history, prefs, FakeMeetingDayRepository(), calculateStreakUseCase())
+        val vm = StatsViewModel(FakeProfileRepository(), history, prefs, FakeMeetingDayRepository(), FakeGoalHistoryRepository(), calculateStreakUseCase())
         keep(vm.state)
         val now = System.currentTimeMillis()
         repeat(40) { history.add(PauseRecord(now, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA)) }

@@ -111,5 +111,8 @@ Una HU está terminada cuando:
 - `UserPaths` mantiene su propio listener de auth además de `FirebaseAuthRepository`.
 - `PauseNotifier` usa `ExerciseCatalog` directamente; se resolverá con un `ExerciseRepository`
   en una iteración futura.
+- `domain/usecase/PauseUseCases.kt` y `SuggestedExercise.kt` importan `data.local.ExerciseCatalog`
+  (deuda previa). No se tocó para no mezclar el refactor con las HU de este sprint; el código nuevo
+  de HU-10/HU-07/HU-17 no agrega imports de `data` en `domain`.
 - `pauseHistory` limita a 500 registros; la racha máxima calculable es ~62 días con meta 8.
 - No hay tests instrumentados previos; se crea el source set `androidTest` en este sprint.

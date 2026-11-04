@@ -8,6 +8,7 @@ import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
 import com.example.caminata20.domain.model.Profile
+import com.example.caminata20.domain.repository.GoalHistoryRepository
 import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.MeetingDayRepository
 import com.example.caminata20.domain.repository.PauseHistoryRepository
@@ -60,6 +61,7 @@ class MyDayViewModel @Inject constructor(
     private val prefs: PreferencesRepository,
     private val local: LocalStateRepository,
     meetingDays: MeetingDayRepository,
+    goalHistory: GoalHistoryRepository,
     private val calculateStreak: CalculateStreakUseCase,
 ) : ViewModel() {
     init {
@@ -84,10 +86,12 @@ class MyDayViewModel @Inject constructor(
         },
         prefs.pauseSettings,
         prefs.reminderSchedule,
-        combine(local.lastExerciseId, meetingDays.days()) { id, days -> id to days },
+        combine(local.lastExerciseId, meetingDays.days(), goalHistory.periods()) { id, days, periods ->
+            Triple(id, days, periods)
+        },
         historyFilters,
     ) { triple, settings, schedule, lastAndMeeting, filters ->
-        val (lastId, meeting) = lastAndMeeting
+        val (lastId, meeting, goalPeriods) = lastAndMeeting
         val (p, all, today) = triple
         val (filter, selectedRange) = filters
         val completedToday = today
@@ -102,7 +106,7 @@ class MyDayViewModel @Inject constructor(
             completed = completedToday.size,
             goal = p.dailyGoal,
             totalMinutes = completedToday.size * settings.durationMin,
-            streak = calculateStreak(all, p.dailyGoal, schedule.activeDays, meeting, System.currentTimeMillis()),
+            streak = calculateStreak(all, p.dailyGoal, goalPeriods, schedule.activeDays, meeting, System.currentTimeMillis()),
             todayRecords = completedToday,
             weekRecords = weekRecords,
             range = selectedRange,

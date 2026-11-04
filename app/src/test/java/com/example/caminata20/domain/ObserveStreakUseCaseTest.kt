@@ -1,5 +1,6 @@
 package com.example.caminata20.domain
 
+import com.example.caminata20.domain.model.GoalPeriod
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
@@ -10,6 +11,7 @@ import com.example.caminata20.domain.usecase.CalculateStreakUseCase
 import com.example.caminata20.domain.usecase.Clock
 import com.example.caminata20.domain.usecase.ObserveStreakUseCase
 import com.example.caminata20.domain.usecase.StreakDayEvaluator
+import com.example.caminata20.fakes.FakeGoalHistoryRepository
 import com.example.caminata20.fakes.FakeMeetingDayRepository
 import com.example.caminata20.fakes.FakePauseHistoryRepository
 import com.example.caminata20.fakes.FakePreferencesRepository
@@ -55,6 +57,7 @@ class ObserveStreakUseCaseTest {
         activeDays: Set<Int> = todos,
         records: List<PauseRecord> = emptyList(),
         meetingDays: Set<Long> = emptySet(),
+        goalPeriods: List<GoalPeriod> = emptyList(),
     ): ObserveStreakUseCase {
         val profile = FakeProfileRepository(Profile("Ana", "ana@x.com", goal))
         val history = FakePauseHistoryRepository().apply { items.value = records }
@@ -62,8 +65,9 @@ class ObserveStreakUseCaseTest {
             scheduleState.value = ReminderScheduleConfig(activeDays = activeDays)
         }
         val meetings = FakeMeetingDayRepository(meetingDays)
+        val goals = FakeGoalHistoryRepository(goalPeriods)
         val calculate = CalculateStreakUseCase(dayWindow, StreakDayEvaluator())
-        return ObserveStreakUseCase(profile, history, prefs, meetings, calculate, dayWindow, Clock { ahora })
+        return ObserveStreakUseCase(profile, history, prefs, meetings, goals, calculate, dayWindow, Clock { ahora })
     }
 
     @Test
@@ -105,5 +109,23 @@ class ObserveStreakUseCaseTest {
         assertEquals(0, result.todayCompleted)
         assertEquals(3, result.todayGoal)
         assertFalse(result.atRisk)
+    }
+
+    @Test
+    fun `C2 cada dia se evalua con la meta que tenia vigente`() = runTest {
+        // Ayer meta 3 cumplida; hoy subió a 4 y todavía van 3 pausas.
+        val periods = listOf(
+            GoalPeriod(inicioDia(1), 3),
+            GoalPeriod(inicioDia(0), 4),
+        )
+        val result = useCase(
+            goal = 4,
+            records = pausas(1, 3) + pausas(0, 3),
+            goalPeriods = periods,
+        ).invoke().first()
+        assertEquals(1, result.current)
+        assertEquals(3, result.todayCompleted)
+        assertEquals(4, result.todayGoal)
+        assertTrue(result.atRisk)
     }
 }

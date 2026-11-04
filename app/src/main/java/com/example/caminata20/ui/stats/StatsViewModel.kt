@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.repository.GoalHistoryRepository
 import com.example.caminata20.domain.repository.MeetingDayRepository
 import com.example.caminata20.domain.repository.PauseHistoryRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
@@ -40,6 +41,7 @@ class StatsViewModel @Inject constructor(
     history: PauseHistoryRepository,
     prefs: PreferencesRepository,
     meetingDays: MeetingDayRepository,
+    goalHistory: GoalHistoryRepository,
     private val calculateStreak: CalculateStreakUseCase,
 ) : ViewModel() {
     private val typeFilter = MutableStateFlow<PauseType?>(null)
@@ -49,11 +51,12 @@ class StatsViewModel @Inject constructor(
         history.records,
         prefs.reminderSchedule,
         typeFilter,
-        meetingDays.days(),
-    ) { perfil, registros, schedule, filter, days ->
+        combine(meetingDays.days(), goalHistory.periods()) { days, periods -> days to periods },
+    ) { perfil, registros, schedule, filter, daysAndPeriods ->
+        val (days, goalPeriods) = daysAndPeriods
         val ahora = System.currentTimeMillis()
         val weekly = EstadisticasSemanalesUseCase.calcular(registros, perfil.dailyGoal, schedule.activeDays, ahora)
-        val streak = calculateStreak(registros, perfil.dailyGoal, schedule.activeDays, days, ahora)
+        val streak = calculateStreak(registros, perfil.dailyGoal, goalPeriods, schedule.activeDays, days, ahora)
         val allHistory = registros
             .filter { it.status == PauseStatus.COMPLETADA }
             .sortedByDescending { it.timestamp }

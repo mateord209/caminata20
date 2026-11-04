@@ -29,7 +29,10 @@ fun StreakCard(streak: StreakResult, modifier: Modifier = Modifier) {
             )
             Column(Modifier.weight(1f)) {
                 Text("Racha actual", style = MaterialTheme.typography.labelMedium)
-                Text("${streak.current} días", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    if (streak.current == 1) "1 día" else "${streak.current} días",
+                    style = MaterialTheme.typography.titleLarge,
+                )
             }
             if (streak.atRisk) {
                 Text(

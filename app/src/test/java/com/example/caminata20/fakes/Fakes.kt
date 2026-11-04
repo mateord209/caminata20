@@ -5,6 +5,7 @@ import com.example.caminata20.domain.model.AiRoutine
 import com.example.caminata20.domain.model.AparienciaApp
 import com.example.caminata20.domain.model.AuthUser
 import com.example.caminata20.domain.model.ConfigHidratacion
+import com.example.caminata20.domain.model.GoalPeriod
 import com.example.caminata20.domain.model.Outcome
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseSettings
@@ -20,6 +21,7 @@ import com.example.caminata20.domain.model.WalkSession
 import com.example.caminata20.domain.repository.AiExerciseGenerator
 import com.example.caminata20.domain.repository.AiRoutineRepository
 import com.example.caminata20.domain.repository.AuthRepository
+import com.example.caminata20.domain.repository.GoalHistoryRepository
 import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.MeetingDayRepository
 import com.example.caminata20.domain.repository.PauseHistoryRepository
@@ -165,6 +167,19 @@ class FakeMeetingDayRepository(initial: Set<Long> = emptySet()) : MeetingDayRepo
     override suspend fun prune(before: Long) {
         prunedBefore = before
         items.update { current -> current.filter { it >= before }.toSet() }
+    }
+}
+
+/** Historial de metas en memoria con la misma semántica que el repositorio real. */
+class FakeGoalHistoryRepository(initial: List<GoalPeriod> = emptyList()) : GoalHistoryRepository {
+    val items = MutableStateFlow(initial)
+    val changes = mutableListOf<Triple<Long, Int, Int>>()
+    override fun periods(): Flow<List<GoalPeriod>> = items
+    override suspend fun recordChange(dayStart: Long, oldGoal: Int, newGoal: Int) {
+        changes += Triple(dayStart, oldGoal, newGoal)
+        val current = items.value.ifEmpty { listOf(GoalPeriod(0L, oldGoal)) }
+        items.value = (current.filterNot { it.fromDay == dayStart } + GoalPeriod(dayStart, newGoal))
+            .sortedBy { it.fromDay }
     }
 }
 
