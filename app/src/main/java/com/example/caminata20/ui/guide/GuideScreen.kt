@@ -57,7 +57,20 @@ fun GuideScreen(exerciseId: String?, onBack: () -> Unit, vm: GuideViewModel = hi
             Box(
                 Modifier.fillMaxWidth().height(180.dp).background(cs.secondaryContainer, RoundedCornerShape(28.dp)),
                 contentAlignment = Alignment.Center,
-            ) { PauseTypeIcon(ex.type, size = 120.dp, container = cs.secondaryContainer) }
+            ) {
+                // HU-16 CA-03: gráfico explicativo animado del ejercicio sugerido
+                ExerciseIllustration(
+                    visual = state.visual,
+                    color = cs.onSecondaryContainer,
+                    accent = cs.primary,
+                    animate = state.running,
+                    description = "Ilustración: ${ex.name}",
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                )
+                Box(Modifier.align(Alignment.TopStart).padding(12.dp)) {
+                    PauseTypeIcon(ex.type, size = 40.dp, container = cs.surface)
+                }
+            }
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),

@@ -132,6 +132,8 @@ class FakeLocalState : LocalStateRepository {
     val meeting = MutableStateFlow<Long?>(null)
     override val meetingUntil: Flow<Long?> = meeting
     override suspend fun setMeetingUntil(until: Long?) { meeting.value = until }
+    val meetingDaysFlow = MutableStateFlow<Set<Long>>(emptySet())
+    override val meetingDays: Flow<Set<Long>> = meetingDaysFlow
 
     private var hidratacion: ConfigHidratacion? = null
     override suspend fun cachedHidratacion() = hidratacion

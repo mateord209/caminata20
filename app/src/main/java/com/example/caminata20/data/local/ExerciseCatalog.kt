@@ -1,9 +1,11 @@
 package com.example.caminata20.data.local
 
 import com.example.caminata20.domain.model.Exercise
+import com.example.caminata20.domain.model.ExerciseVisual
 import com.example.caminata20.domain.model.PauseType
+import kotlin.random.Random
 
-/** HU-16: catálogo local (12 ejercicios por tipo de pausa, 48 en total). */
+/** HU-16: catálogo local (≥12 ejercicios por tipo de pausa; Estiramiento incluye 10 básicos con stickman). */
 object ExerciseCatalog {
     val all: List<Exercise> = listOf(
         Exercise("est_01", PauseType.ESTIRAMIENTO, "Estiramiento de cuello", "Cuello y hombros", 120, listOf("Siéntate erguido con los hombros relajados.", "Inclina la cabeza hacia el hombro derecho 15 s.", "Repite hacia el lado izquierdo 15 s.", "Gira suavemente el cuello en círculos 5 veces.")),
@@ -18,6 +20,17 @@ object ExerciseCatalog {
         Exercise("est_10", PauseType.ESTIRAMIENTO, "Elevación de talones", "Pantorrillas", 60, listOf("De pie, apoya las manos en el escritorio.", "Sube en puntas de pie.", "Baja lentamente.", "Repite 15 veces.")),
         Exercise("est_11", PauseType.ESTIRAMIENTO, "Gato-vaca sentado", "Columna", 60, listOf("Siéntate con las manos sobre las rodillas.", "Al inhalar arquea la espalda y mira arriba.", "Al exhalar redondea la espalda y mira al ombligo.", "Repite 8 veces.")),
         Exercise("est_12", PauseType.ESTIRAMIENTO, "Apertura de cadera sentado", "Cadera", 90, listOf("Siéntate y cruza el tobillo derecho sobre la rodilla izquierda.", "Inclina el tronco hacia adelante 20 s.", "Vuelve con la espalda recta.", "Cambia de pierna.")),
+        // Básicos con animación stickman
+        Exercise("est_13", PauseType.ESTIRAMIENTO, "Brazo cruzado al pecho", "Hombros", 60, listOf("Lleva el brazo derecho estirado hacia el hombro contrario.", "Con la mano izquierda presiona el codo hacia el pecho 15 s.", "Cambia de brazo 15 s.")),
+        Exercise("est_14", PauseType.ESTIRAMIENTO, "Rodilla al pecho", "Cadera y glúteos", 60, listOf("De pie, apóyate en el escritorio si lo necesitas.", "Sube la rodilla derecha y abrázala hacia el pecho 10 s.", "Baja despacio y repite con la izquierda.")),
+        Exercise("est_15", PauseType.ESTIRAMIENTO, "Sentadilla suave", "Piernas", 60, listOf("Separa los pies al ancho de los hombros.", "Baja la cadera como si te sentaras, brazos al frente.", "Sube despacio apretando glúteos.", "Repite 10 veces.")),
+        Exercise("est_16", PauseType.ESTIRAMIENTO, "Círculos de brazos", "Hombros", 45, listOf("Abre los brazos en cruz.", "Haz círculos pequeños hacia adelante 15 s.", "Luego círculos hacia atrás 15 s.")),
+        Exercise("est_17", PauseType.ESTIRAMIENTO, "Retracción de barbilla", "Cuello", 45, listOf("Siéntate erguido mirando al frente.", "Lleva la barbilla hacia atrás, como haciendo papada.", "Mantén 3 s y suelta.", "Repite 10 veces.")),
+        Exercise("est_18", PauseType.ESTIRAMIENTO, "Estiramiento total en puntillas", "Cuerpo completo", 30, listOf("Entrelaza las manos y súbelas sobre la cabeza.", "Ponte en puntillas y estírate hacia el techo 10 s.", "Baja talones y brazos despacio.", "Repite 3 veces.")),
+        Exercise("est_19", PauseType.ESTIRAMIENTO, "Marcha en el sitio", "Piernas y circulación", 60, listOf("Ponte de pie con la espalda recta.", "Sube una rodilla y luego la otra, como marchando.", "Balancea los brazos al ritmo 45 s.")),
+        Exercise("est_20", PauseType.ESTIRAMIENTO, "Apertura de brazos en T", "Pecho y espalda alta", 45, listOf("Junta las palmas al frente a la altura del pecho.", "Abre los brazos en T llevando los hombros atrás.", "Vuelve al centro y repite 10 veces.")),
+        Exercise("est_21", PauseType.ESTIRAMIENTO, "Golpes al aire", "Brazos y hombros", 45, listOf("Separa los pies y flexiona un poco las rodillas.", "Lanza un golpe suave al frente con cada brazo, alternando.", "Sigue 30 s respirando con ritmo.")),
+        Exercise("est_22", PauseType.ESTIRAMIENTO, "Balanceo de cadera", "Cadera y espalda baja", 45, listOf("Pon las manos en la cintura.", "Lleva la cadera suavemente a la derecha y a la izquierda.", "Repite 10 veces cada lado sin forzar.")),
         Exercise("vis_01", PauseType.DESCANSO_VISUAL, "Regla 20-20-20", "Ojos", 20, listOf("Aparta la vista de la pantalla.", "Mira un objeto a unos 6 m (20 pies).", "Mantén la mirada 20 segundos.", "Parpadea suavemente y vuelve.")),
         Exercise("vis_02", PauseType.DESCANSO_VISUAL, "Parpadeo consciente", "Ojos", 30, listOf("Cierra los ojos suavemente 2 s.", "Ábrelos y parpadea rápido 10 veces.", "Repite el ciclo 3 veces.", "Respira tranquilo.")),
         Exercise("vis_03", PauseType.DESCANSO_VISUAL, "Palming", "Ojos", 60, listOf("Frota las palmas hasta sentirlas tibias.", "Cubre los ojos cerrados sin presionar.", "Respira profundo 30 s en la oscuridad.", "Retira las manos despacio.")),
@@ -60,10 +73,60 @@ object ExerciseCatalog {
 
     fun byId(id: String?): Exercise? = all.firstOrNull { it.id == id }
 
-    /** Rota por el catálogo del tipo para no repetir el mismo ejercicio. */
-    fun next(type: PauseType, lastId: String?): Exercise {
+    /** Últimos ejercicios sugeridos (en memoria) para no repetir los recientes. */
+    private val recent = ArrayDeque<String>()
+    private const val RECENT_SIZE = 3
+
+    /** Ejercicio aleatorio del tipo, evitando los ids de [exclude] (si quedan opciones). */
+    fun random(type: PauseType, exclude: Collection<String?> = emptyList(), rnd: Random = Random.Default): Exercise {
         val list = byType(type)
-        val idx = list.indexOfFirst { it.id == lastId }
-        return list[(idx + 1).mod(list.size)]
+        val candidates = list.filter { it.id !in exclude }.ifEmpty { list.filter { it.id != exclude.lastOrNull() } }.ifEmpty { list }
+        return candidates.random(rnd)
+    }
+
+    /** Siguiente sugerencia: aleatoria dentro del tipo, nunca igual a [lastId] y evitando las últimas. */
+    @Synchronized
+    fun next(type: PauseType, lastId: String?, rnd: Random = Random.Default): Exercise {
+        val exclude = recent.toList() + lastId
+        val ex = random(type, exclude, rnd).takeIf { it.id != lastId } ?: random(type, listOf(lastId), rnd)
+        recent.addLast(ex.id)
+        while (recent.size > RECENT_SIZE) recent.removeFirst()
+        return ex
+    }
+
+    /** HU-16 CA-03: gráfico explicativo de cada ejercicio (por id; fallback por tipo). */
+    private val visuals: Map<String, ExerciseVisual> = mapOf(
+        "est_01" to ExerciseVisual.NECK_TILT, "est_02" to ExerciseVisual.SHOULDER_ROLL,
+        "est_03" to ExerciseVisual.ARM_STRETCH, "est_04" to ExerciseVisual.TORSO_TWIST,
+        "est_05" to ExerciseVisual.CHEST_OPEN, "est_06" to ExerciseVisual.SIDE_BEND,
+        "est_07" to ExerciseVisual.TRICEPS, "est_08" to ExerciseVisual.FORWARD_BEND,
+        "est_09" to ExerciseVisual.QUAD_STAND, "est_10" to ExerciseVisual.HEEL_RAISE,
+        "est_11" to ExerciseVisual.FORWARD_BEND, "est_12" to ExerciseVisual.LEG_STRETCH,
+        // Básicos stickman
+        "est_13" to ExerciseVisual.CROSS_ARM,
+        "est_14" to ExerciseVisual.KNEE_TO_CHEST,
+        "est_15" to ExerciseVisual.SQUAT,
+        "est_16" to ExerciseVisual.ARM_CIRCLES,
+        "est_17" to ExerciseVisual.CHIN_TUCK,
+        "est_18" to ExerciseVisual.FULL_REACH,
+        "est_19" to ExerciseVisual.MARCH,
+        "est_20" to ExerciseVisual.CHEST_OPEN,
+        "est_21" to ExerciseVisual.PUNCH,
+        "est_22" to ExerciseVisual.HIP_SWAY,
+        "vis_01" to ExerciseVisual.EYE_DISTANCE, "vis_02" to ExerciseVisual.EYES_CLOSED,
+        "vis_03" to ExerciseVisual.EYES_CLOSED, "vis_04" to ExerciseVisual.EYE_DISTANCE,
+        "vis_05" to ExerciseVisual.EYE_MOVE, "vis_06" to ExerciseVisual.EYE_MOVE,
+        "vis_07" to ExerciseVisual.EYE_DISTANCE, "vis_08" to ExerciseVisual.EYES_CLOSED,
+        "vis_09" to ExerciseVisual.EYE_MOVE, "vis_10" to ExerciseVisual.EYE_MOVE,
+        "vis_11" to ExerciseVisual.EYES_CLOSED, "vis_12" to ExerciseVisual.EYE_DISTANCE,
+        "res_07" to ExerciseVisual.SHOULDER_ROLL, "res_12" to ExerciseVisual.ARM_STRETCH,
+        "hid_03" to ExerciseVisual.ARM_STRETCH, "hid_07" to ExerciseVisual.LEG_STRETCH,
+    )
+
+    fun visualFor(exercise: Exercise): ExerciseVisual = visuals[exercise.id] ?: when (exercise.type) {
+        PauseType.ESTIRAMIENTO -> ExerciseVisual.ARM_STRETCH
+        PauseType.DESCANSO_VISUAL -> ExerciseVisual.EYE_DISTANCE
+        PauseType.RESPIRACION -> ExerciseVisual.BREATH
+        PauseType.HIDRATACION -> ExerciseVisual.WATER
     }
 }

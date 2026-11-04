@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.example.caminata20.domain.usecase.SuggestedExercise
 import javax.inject.Inject
 
 data class AlertsUiState(
@@ -32,10 +33,18 @@ data class AlertsUiState(
 /** HU-03: pantalla Alertas con Completar / Posponer y advertencia de racha. */
 @HiltViewModel
 class AlertsViewModel @Inject constructor(
-    prefs: PreferencesRepository,
-    local: LocalStateRepository,
+    private val prefs: PreferencesRepository,
+    private val local: LocalStateRepository,
     private val actions: PauseActionsUseCase,
 ) : ViewModel() {
+    init {
+        viewModelScope.launch {
+            combine(prefs.pauseSettings, local.lastExerciseId) { s, id -> s.type to id }
+                .collect { (type, id) -> // se lee el tipo actual (no el emitido) para no competir con otra pantalla con un valor viejo
+                    if (SuggestedExercise.current(id, type) == null) SuggestedExercise.ensure(local, prefs.current().type) }
+        }
+    }
+
     private val message = MutableStateFlow<String?>(null)
 
     val state: StateFlow<AlertsUiState> = combine(
@@ -48,7 +57,7 @@ class AlertsViewModel @Inject constructor(
         val (s, schedule) = settingsPair
         AlertsUiState(
             type = s.type,
-            exercise = ExerciseCatalog.byId(lastId)?.takeIf { it.type == s.type } ?: ExerciseCatalog.byType(s.type).first(),
+            exercise = SuggestedExercise.current(lastId, s.type),
             consecutiveSnoozes = count,
             schedule = schedule,
             meetingActive = meetingUntil != null && meetingUntil > System.currentTimeMillis(),
