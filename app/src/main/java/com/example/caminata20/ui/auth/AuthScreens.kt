@@ -12,11 +12,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -30,7 +28,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -53,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.caminata20.R
+import com.example.caminata20.ui.auth.components.GoogleSignInButton
 import com.example.caminata20.ui.components.PrimaryButton
 import com.example.caminata20.ui.components.TopBar
 import com.example.caminata20.ui.util.showToast
@@ -141,15 +139,10 @@ fun LoginScreen(
         TextButton(onClick = onForgot, modifier = Modifier.align(Alignment.End)) { Text("¿Olvidaste tu contraseña?") }
         if (state.loading) CircularProgressIndicator()
         PrimaryButton("Ingresar", onClick = vm::signIn, enabled = !state.loading, modifier = Modifier.fillMaxWidth())
-        OutlinedButton(
+        GoogleSignInButton(
             onClick = { googleLauncher.launch(client.signInIntent) },
             enabled = !state.loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
-        ) {
-            Image(painterResource(R.drawable.ic_google), contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Text("Continuar con Google")
-        }
+        )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("¿No tenés cuenta?")
             TextButton(onClick = onRegister) { Text("Registrate") }
