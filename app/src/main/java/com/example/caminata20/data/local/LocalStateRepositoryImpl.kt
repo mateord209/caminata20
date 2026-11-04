@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.caminata20.domain.model.AparienciaApp
 import com.example.caminata20.domain.model.ConfigHidratacion
@@ -35,6 +36,7 @@ class LocalStateRepositoryImpl @Inject constructor(
         val INTERVAL_MIN = intPreferencesKey("interval_min")
         val ACTIVE_DAYS = intPreferencesKey("active_days_mask")
         val MEETING_UNTIL = longPreferencesKey("meeting_until")
+        val MEETING_DAYS = stringSetPreferencesKey("meeting_days")
         val HYDRATION_ACTIVE = booleanPreferencesKey("hydration_active")
         val HYDRATION_INTERVAL = intPreferencesKey("hydration_interval")
         val PHRASE_INDEX = intPreferencesKey("phrase_index")
@@ -94,9 +96,25 @@ class LocalStateRepositoryImpl @Inject constructor(
 
     override suspend fun setMeetingUntil(until: Long?) {
         store.edit {
-            if (until == null) it.remove(Keys.MEETING_UNTIL) else it[Keys.MEETING_UNTIL] = until
+            if (until == null) {
+                it.remove(Keys.MEETING_UNTIL)
+            } else {
+                it[Keys.MEETING_UNTIL] = until
+                val days = setOf(startOfDay(System.currentTimeMillis()), startOfDay(until)).map(Long::toString)
+                it[Keys.MEETING_DAYS] = (it[Keys.MEETING_DAYS].orEmpty() + days)
+            }
         }
     }
+
+    override val meetingDays: Flow<Set<Long>> = store.data.map { p ->
+        p[Keys.MEETING_DAYS].orEmpty().mapNotNull(String::toLongOrNull).toSet()
+    }
+
+    private fun startOfDay(ms: Long): Long = java.util.Calendar.getInstance().apply {
+        timeInMillis = ms
+        set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+        set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+    }.timeInMillis
 
     override suspend fun cachedHidratacion(): ConfigHidratacion? {
         val p = store.data.first()
