@@ -1,0 +1,10 @@
+appId: com.example.caminata20
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    text: "Omitir"
+    optional: true
+- tapOn: "Ingresar"
+- assertVisible: "Ingresá tu correo"
+- assertVisible: "Ingresá tu contraseña"

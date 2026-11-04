@@ -38,7 +38,8 @@ maestro test .maestro                # E2E (requiere Maestro CLI)
 ```
 
 Los tests unitarios no llaman a Firebase ni a un emulador. Los flujos Maestro usan variables de
-entorno para las credenciales de la cuenta de prueba.
+entorno para las credenciales de la cuenta de prueba. Detalle de cada capa y del CI en
+[`docs/TESTING.md`](docs/TESTING.md).
 
 ## CI: build y publicación de la release
 
