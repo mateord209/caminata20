@@ -209,7 +209,7 @@ class ViewModelsTest {
     @Test
     fun `perfil valida nombre, limita la meta y cierra sesion`() = runTest {
         val repo = FakeProfileRepository(); val auth = FakeAuthRepository(); val local = FakeLocalState()
-        val vm = ProfileViewModel(repo, SignOutUseCase(auth, local, FakePauseScheduler(), FakeReminderScheduler()))
+        val vm = ProfileViewModel(repo, SignOutUseCase(auth, local, FakePauseScheduler(), FakeReminderScheduler(), GetPhraseUseCase(FakePhraseRepository())))
         vm.onNameChange("  "); vm.save()
         assertEquals("El nombre no puede estar vacío", vm.state.value.nameError)
         vm.onGoalChange(40)

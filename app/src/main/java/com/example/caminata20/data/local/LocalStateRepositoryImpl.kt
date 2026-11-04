@@ -155,8 +155,6 @@ class LocalStateRepositoryImpl @Inject constructor(
             it.remove(Keys.MEETING_DAYS)
             it.remove(Keys.HYDRATION_ACTIVE)
             it.remove(Keys.HYDRATION_INTERVAL)
-            it.remove(Keys.PHRASE_INDEX)
-            it.remove(Keys.PHRASE_AT)
         }
     }
 
