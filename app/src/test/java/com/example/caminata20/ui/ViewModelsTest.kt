@@ -9,20 +9,27 @@ import com.example.caminata20.domain.model.Outcome
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.model.Profile
 import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.TemaApp
 import com.example.caminata20.domain.model.WalkSession
+import com.example.caminata20.domain.time.DayWindowCalculator
+import com.example.caminata20.domain.usecase.CalculateStreakUseCase
 import com.example.caminata20.domain.usecase.Clock
 import com.example.caminata20.domain.usecase.FraseMotivacionalUseCase
+import com.example.caminata20.domain.usecase.MarkMeetingDayUseCase
+import com.example.caminata20.domain.usecase.ObserveStreakUseCase
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
 import com.example.caminata20.domain.usecase.PauseScheduleSync
 import com.example.caminata20.domain.usecase.RegisterUserUseCase
 import com.example.caminata20.domain.usecase.SignOutUseCase
+import com.example.caminata20.domain.usecase.StreakDayEvaluator
 import com.example.caminata20.domain.validation.AuthValidator
 import com.example.caminata20.fakes.FakeAiRoutineRepository
 import com.example.caminata20.fakes.FakeAuthRepository
 import com.example.caminata20.fakes.FakeGenerator
 import com.example.caminata20.fakes.FakeLocalState
+import com.example.caminata20.fakes.FakeMeetingDayRepository
 import com.example.caminata20.fakes.FakeNotifications
 import com.example.caminata20.fakes.FakePauseHistoryRepository
 import com.example.caminata20.fakes.FakePauseScheduler
@@ -65,10 +72,27 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.util.Calendar
+import java.util.TimeZone
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ViewModelsTest {
     @get:Rule val main = MainDispatcherRule()
+
+    private val dayWindow = DayWindowCalculator(TimeZone.getDefault())
+
+    private fun calculateStreakUseCase() = CalculateStreakUseCase(dayWindow, StreakDayEvaluator())
+
+    private fun observeStreakUseCase(
+        profile: FakeProfileRepository = FakeProfileRepository(),
+        history: FakePauseHistoryRepository = FakePauseHistoryRepository(),
+        prefs: FakePreferencesRepository = FakePreferencesRepository(),
+        meetings: FakeMeetingDayRepository = FakeMeetingDayRepository(),
+    ) = ObserveStreakUseCase(
+        profile, history, prefs, meetings, calculateStreakUseCase(), dayWindow, Clock { System.currentTimeMillis() },
+    )
+
+    private fun markMeetingDayUseCase(repo: FakeMeetingDayRepository = FakeMeetingDayRepository()) =
+        MarkMeetingDayUseCase(repo, dayWindow)
 
     /** Mantiene suscrito un StateFlow con WhileSubscribed durante el test. */
     private fun <T> TestScope.keep(flow: StateFlow<T>) = backgroundScope.launch(main.dispatcher) { flow.collect {} }
@@ -221,7 +245,7 @@ class ViewModelsTest {
     @Test
     fun `mi dia recalcula el progreso al cambiar la meta o completar`() = runTest {
         val profile = FakeProfileRepository(); val history = FakePauseHistoryRepository()
-        val vm = MyDayViewModel(profile, history, FakePreferencesRepository(), FakeLocalState())
+        val vm = MyDayViewModel(profile, history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), calculateStreakUseCase())
         keep(vm.state)
         repeat(2) { history.add(PauseRecord(it.toLong(), PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA)) }
         history.add(PauseRecord(9, PauseType.ESTIRAMIENTO, PauseStatus.POSPUESTA))
@@ -238,7 +262,7 @@ class ViewModelsTest {
         // FakePauseHistoryRepository.today devuelve todos los ítems, así que sembramos
         // timestamps reales para validar el filtro de 7 días sobre `records`.
         val history = FakePauseHistoryRepository()
-        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState())
+        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), calculateStreakUseCase())
         keep(vm.state)
         val now = System.currentTimeMillis()
         val day = 86_400_000L
@@ -259,7 +283,7 @@ class ViewModelsTest {
     @Test
     fun `HU-04 cambiar de rango conserva el historial completado del dia`() = runTest {
         val history = FakePauseHistoryRepository()
-        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState())
+        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), calculateStreakUseCase())
         keep(vm.state)
         val now = System.currentTimeMillis()
         history.add(PauseRecord(now, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
@@ -279,7 +303,7 @@ class ViewModelsTest {
     @Test
     fun `HU-09 el filtro por categoria convive con el rango de mi dia`() = runTest {
         val history = FakePauseHistoryRepository()
-        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState())
+        val vm = MyDayViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState(), FakeMeetingDayRepository(), calculateStreakUseCase())
         keep(vm.state)
         val now = System.currentTimeMillis()
         history.add(PauseRecord(now - 3_000, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
@@ -322,7 +346,7 @@ class ViewModelsTest {
     fun `inicio calcula totales desde las caminatas`() = runTest {
         val walks = FakeWalkRepository()
         val local = FakeLocalState()
-        val vm = HomeViewModel(FakeProfileRepository(), walks, FakePreferencesRepository(), local, FraseMotivacionalUseCase(local))
+        val vm = HomeViewModel(FakeProfileRepository(), walks, FakePreferencesRepository(), local, observeStreakUseCase(), FraseMotivacionalUseCase(local))
         keep(vm.state)
         walks.add(WalkSession(System.currentTimeMillis(), 1000, 0.75))
         walks.add(WalkSession(System.currentTimeMillis(), 500, 0.25))
@@ -335,7 +359,7 @@ class ViewModelsTest {
     fun `HU-08 inicio refleja al instante el cambio de tipo de pausa`() = runTest {
         val prefs = FakePreferencesRepository()
         val local = FakeLocalState()
-        val home = HomeViewModel(FakeProfileRepository(), FakeWalkRepository(), prefs, local, FraseMotivacionalUseCase(local))
+        val home = HomeViewModel(FakeProfileRepository(), FakeWalkRepository(), prefs, local, observeStreakUseCase(prefs = prefs), FraseMotivacionalUseCase(local))
         keep(home.state)
         assertEquals(PauseType.ESTIRAMIENTO, home.state.value.pauseSettings.type)
 
@@ -353,6 +377,30 @@ class ViewModelsTest {
     }
 
     @Test
+    fun `HU-17 inicio muestra la racha y el progreso de hoy`() = runTest {
+        val profile = FakeProfileRepository(Profile("Ana", "ana@x.com", 3))
+        val history = FakePauseHistoryRepository()
+        val prefs = FakePreferencesRepository().apply {
+            scheduleState.value = ReminderScheduleConfig(activeDays = (1..7).toSet())
+        }
+        val local = FakeLocalState()
+        val now = System.currentTimeMillis()
+        val yesterday = dayWindow.previousDayStart(now) + 9 * 3_600_000L
+        repeat(3) { history.add(PauseRecord(now, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA)) }
+        repeat(3) { history.add(PauseRecord(yesterday, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA)) }
+        val vm = HomeViewModel(
+            profile, FakeWalkRepository(), prefs, local,
+            observeStreakUseCase(profile, history, prefs), FraseMotivacionalUseCase(local),
+        )
+        keep(vm.state)
+
+        assertEquals(2, vm.state.value.streak.current)
+        assertEquals(3, vm.state.value.streak.todayCompleted)
+        assertEquals(3, vm.state.value.streak.todayGoal)
+        assertFalse(vm.state.value.streak.atRisk)
+    }
+
+    @Test
     fun `HU-08 cada tipo de pausa tiene un icono distinto`() {
         val icons = PauseType.entries.map { it.icon }
         assertEquals(PauseType.entries.size, icons.toSet().size)
@@ -365,7 +413,7 @@ class ViewModelsTest {
         val sync = PauseScheduleSync(prefs, local, scheduler, FakeReminderScheduler())
         val useCase = PauseActionsUseCase(prefs, FakePauseHistoryRepository(), local, scheduler, sync, FakeNotifications(), Clock { 0 })
         val alerts = AlertsViewModel(prefs, local, useCase)
-        val myDay = MyDayViewModel(FakeProfileRepository(), FakePauseHistoryRepository(), prefs, local)
+        val myDay = MyDayViewModel(FakeProfileRepository(), FakePauseHistoryRepository(), prefs, local, FakeMeetingDayRepository(), calculateStreakUseCase())
         keep(alerts.state); keep(myDay.state)
         prefs.savePauseSettings(PauseType.RESPIRACION, 2)
         assertEquals(PauseType.RESPIRACION, alerts.state.value.type)
@@ -416,7 +464,7 @@ class ViewModelsTest {
     @Test
     fun `HU-09 el historial de estadisticas ordena y filtra por categoria`() = runTest {
         val history = FakePauseHistoryRepository()
-        val vm = StatsViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeLocalState())
+        val vm = StatsViewModel(FakeProfileRepository(), history, FakePreferencesRepository(), FakeMeetingDayRepository(), calculateStreakUseCase())
         keep(vm.state)
         val now = System.currentTimeMillis()
         history.add(PauseRecord(now - 3_000, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA))
@@ -446,7 +494,7 @@ class ViewModelsTest {
             ),
         )
         val history = FakePauseHistoryRepository()
-        val vm = StatsViewModel(FakeProfileRepository(), history, prefs, FakeLocalState())
+        val vm = StatsViewModel(FakeProfileRepository(), history, prefs, FakeMeetingDayRepository(), calculateStreakUseCase())
         keep(vm.state)
         val now = System.currentTimeMillis()
         repeat(40) { history.add(PauseRecord(now, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA)) }
@@ -463,7 +511,7 @@ class ViewModelsTest {
     fun `HU-13 cambiar tema persiste de inmediato en local`() = runTest {
         val prefs = FakePreferencesRepository(); val local = FakeLocalState()
         val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
-        val vm = SettingsViewModel(prefs, local, sync)
+        val vm = SettingsViewModel(prefs, local, sync, markMeetingDayUseCase())
         advanceUntilIdle()
 
         vm.setTheme(TemaApp.OSCURO)
@@ -479,7 +527,7 @@ class ViewModelsTest {
     fun `HU-13 cambiar escala de texto persiste de inmediato en local`() = runTest {
         val prefs = FakePreferencesRepository(); val local = FakeLocalState()
         val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
-        val vm = SettingsViewModel(prefs, local, sync)
+        val vm = SettingsViewModel(prefs, local, sync, markMeetingDayUseCase())
         advanceUntilIdle()
 
         vm.setTextScale(EscalaTexto.EXTRA_GRANDE)
@@ -497,7 +545,7 @@ class ViewModelsTest {
             aparienciaState.value = AparienciaApp(TemaApp.OSCURO, EscalaTexto.GRANDE)
         }
         val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
-        val vm = SettingsViewModel(prefs, local, sync)
+        val vm = SettingsViewModel(prefs, local, sync, markMeetingDayUseCase())
         advanceUntilIdle()
 
         assertEquals(AparienciaApp(TemaApp.OSCURO, EscalaTexto.GRANDE), vm.state.value.apariencia)
@@ -510,13 +558,28 @@ class ViewModelsTest {
         }
         val local = FakeLocalState()
         val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
-        val vm = SettingsViewModel(prefs, local, sync)
+        val vm = SettingsViewModel(prefs, local, sync, markMeetingDayUseCase())
         advanceUntilIdle()
 
         assertEquals(TemaApp.OSCURO, vm.state.value.apariencia.tema)
         assertEquals(EscalaTexto.GRANDE, vm.state.value.apariencia.escalaTexto)
         assertEquals(TemaApp.OSCURO, local.aparienciaState.value.tema)
         assertEquals(EscalaTexto.GRANDE, local.aparienciaState.value.escalaTexto)
+    }
+
+    @Test
+    fun `HU-17 activar modo reunion marca el dia`() = runTest {
+        val prefs = FakePreferencesRepository(); val local = FakeLocalState()
+        val sync = PauseScheduleSync(prefs, local, FakePauseScheduler(), FakeReminderScheduler())
+        val repo = FakeMeetingDayRepository()
+        val vm = SettingsViewModel(prefs, local, sync, markMeetingDayUseCase(repo))
+        advanceUntilIdle()
+
+        vm.enableMeeting(60)
+        advanceUntilIdle()
+
+        assertTrue(local.meeting.value != null)
+        assertTrue(dayWindow.startOfDay(System.currentTimeMillis()) in repo.items.value)
     }
 
     // ---------- Recordatorio ----------

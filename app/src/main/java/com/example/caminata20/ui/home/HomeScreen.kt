@@ -61,6 +61,7 @@ fun HomeScreen(onNavigate: (String) -> Unit, vm: HomeViewModel = hiltViewModel()
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text("Hola, ${state.userName}", style = MaterialTheme.typography.titleLarge)
+            StreakCard(state.streak)
             if (state.motivationalPhrase.isNotBlank()) {
                 BreakeeCard {
                     Text("Tip del día", style = MaterialTheme.typography.labelMedium)

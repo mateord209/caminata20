@@ -5,13 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.repository.MeetingDayRepository
 import com.example.caminata20.domain.repository.PauseHistoryRepository
-import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.domain.repository.ProfileRepository
+import com.example.caminata20.domain.usecase.CalculateStreakUseCase
 import com.example.caminata20.domain.usecase.DiaCumplimiento
 import com.example.caminata20.domain.usecase.EstadisticasSemanalesUseCase
-import com.example.caminata20.domain.usecase.RachaDiariaUseCase
 import com.example.caminata20.domain.usecase.WeeklyShareSummary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +39,8 @@ class StatsViewModel @Inject constructor(
     profile: ProfileRepository,
     history: PauseHistoryRepository,
     prefs: PreferencesRepository,
-    local: LocalStateRepository,
+    meetingDays: MeetingDayRepository,
+    private val calculateStreak: CalculateStreakUseCase,
 ) : ViewModel() {
     private val typeFilter = MutableStateFlow<PauseType?>(null)
 
@@ -48,10 +49,11 @@ class StatsViewModel @Inject constructor(
         history.records,
         prefs.reminderSchedule,
         typeFilter,
-        local.meetingDays,
-    ) { perfil, registros, schedule, filter, meetingDays ->
-        val weekly = EstadisticasSemanalesUseCase.calcular(registros, perfil.dailyGoal, schedule.activeDays)
-        val streak = RachaDiariaUseCase.calcular(registros, perfil.dailyGoal, schedule.activeDays, diasReunion = meetingDays)
+        meetingDays.days(),
+    ) { perfil, registros, schedule, filter, days ->
+        val ahora = System.currentTimeMillis()
+        val weekly = EstadisticasSemanalesUseCase.calcular(registros, perfil.dailyGoal, schedule.activeDays, ahora)
+        val streak = calculateStreak(registros, perfil.dailyGoal, schedule.activeDays, days, ahora)
         val allHistory = registros
             .filter { it.status == PauseStatus.COMPLETADA }
             .sortedByDescending { it.timestamp }

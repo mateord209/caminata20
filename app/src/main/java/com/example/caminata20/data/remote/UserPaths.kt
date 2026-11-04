@@ -18,6 +18,7 @@ import javax.inject.Singleton
  * Estructura en Cloud Firestore (todo cuelga del uid; ver firestore.rules):
  *  users/{uid}                         perfil + meta diaria
  *  users/{uid}/settings/preferences    tipo/duración de pausa, recordatorio
+ *  users/{uid}/settings/meetingDays    días con Modo Reunión (HU-17)
  *  users/{uid}/pauseHistory/{id}       historial de pausas
  *  users/{uid}/walks/{id}              caminatas
  *  users/{uid}/aiRoutines/{id}         rutinas de IA completadas
@@ -37,6 +38,7 @@ class UserPaths @Inject constructor(
 
     fun userDoc(uid: String): DocumentReference = db.collection(USERS).document(uid)
     fun preferences(uid: String): DocumentReference = userDoc(uid).collection("settings").document("preferences")
+    fun meetingDays(uid: String): DocumentReference = userDoc(uid).collection("settings").document("meetingDays")
     fun pauseHistory(uid: String): CollectionReference = userDoc(uid).collection("pauseHistory")
     fun walks(uid: String): CollectionReference = userDoc(uid).collection("walks")
     fun aiRoutines(uid: String): CollectionReference = userDoc(uid).collection("aiRoutines")

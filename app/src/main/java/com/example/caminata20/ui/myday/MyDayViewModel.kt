@@ -9,10 +9,11 @@ import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
 import com.example.caminata20.domain.model.Profile
 import com.example.caminata20.domain.repository.LocalStateRepository
+import com.example.caminata20.domain.repository.MeetingDayRepository
 import com.example.caminata20.domain.repository.PauseHistoryRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.domain.repository.ProfileRepository
-import com.example.caminata20.domain.usecase.RachaDiariaUseCase
+import com.example.caminata20.domain.usecase.CalculateStreakUseCase
 import com.example.caminata20.domain.usecase.SuggestedExercise
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,6 +59,8 @@ class MyDayViewModel @Inject constructor(
     history: PauseHistoryRepository,
     private val prefs: PreferencesRepository,
     private val local: LocalStateRepository,
+    meetingDays: MeetingDayRepository,
+    private val calculateStreak: CalculateStreakUseCase,
 ) : ViewModel() {
     init {
         // HU-16: al abrir o al cambiar el tipo de pausa, garantiza un ejercicio válido (aleatorio) y persistido
@@ -81,10 +84,10 @@ class MyDayViewModel @Inject constructor(
         },
         prefs.pauseSettings,
         prefs.reminderSchedule,
-        combine(local.lastExerciseId, local.meetingDays) { id, days -> id to days },
+        combine(local.lastExerciseId, meetingDays.days()) { id, days -> id to days },
         historyFilters,
     ) { triple, settings, schedule, lastAndMeeting, filters ->
-        val (lastId, meetingDays) = lastAndMeeting
+        val (lastId, meeting) = lastAndMeeting
         val (p, all, today) = triple
         val (filter, selectedRange) = filters
         val completedToday = today
@@ -99,7 +102,7 @@ class MyDayViewModel @Inject constructor(
             completed = completedToday.size,
             goal = p.dailyGoal,
             totalMinutes = completedToday.size * settings.durationMin,
-            streak = RachaDiariaUseCase.calcular(all, p.dailyGoal, schedule.activeDays, diasReunion = meetingDays),
+            streak = calculateStreak(all, p.dailyGoal, schedule.activeDays, meeting, System.currentTimeMillis()),
             todayRecords = completedToday,
             weekRecords = weekRecords,
             range = selectedRange,

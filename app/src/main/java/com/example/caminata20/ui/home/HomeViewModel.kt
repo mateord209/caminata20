@@ -3,12 +3,14 @@ package com.example.caminata20.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.caminata20.domain.model.PauseSettings
+import com.example.caminata20.domain.model.StreakResult
 import com.example.caminata20.domain.model.WalkStats
 import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.domain.repository.ProfileRepository
 import com.example.caminata20.domain.repository.WalkRepository
 import com.example.caminata20.domain.usecase.FraseMotivacionalUseCase
+import com.example.caminata20.domain.usecase.ObserveStreakUseCase
 import com.example.caminata20.domain.usecase.WalkStatsCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,15 +28,17 @@ data class HomeUiState(
     val motivationalPhrase: String = "",
     val meetingActive: Boolean = false,
     val intervalMin: Int = 60,
+    val streak: StreakResult = StreakResult(),
 )
 
-/** Inicio: saludo, caminatas y frase motivacional (HU-07, HU-08). */
+/** Inicio: saludo, racha, caminatas y frase motivacional (HU-07, HU-08, HU-17). */
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     profile: ProfileRepository,
     walks: WalkRepository,
     prefs: PreferencesRepository,
     local: LocalStateRepository,
+    streakUseCase: ObserveStreakUseCase,
     private val fraseUseCase: FraseMotivacionalUseCase,
 ) : ViewModel() {
     private val phrase = MutableStateFlow("")
@@ -49,8 +53,9 @@ class HomeViewModel @Inject constructor(
         },
         prefs.reminderSchedule,
         local.meetingUntil,
+        streakUseCase(),
         phrase,
-    ) { triple, schedule, meetingUntil, frase ->
+    ) { triple, schedule, meetingUntil, streak, frase ->
         val (p, sessions, settings) = triple
         HomeUiState(
             userName = p.name.ifBlank { p.email.ifBlank { "Invitado" } },
@@ -59,6 +64,7 @@ class HomeViewModel @Inject constructor(
             motivationalPhrase = frase,
             meetingActive = meetingUntil != null && meetingUntil > System.currentTimeMillis(),
             intervalMin = schedule.intervalMin,
+            streak = streak,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 }
