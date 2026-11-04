@@ -16,6 +16,7 @@ class SignOutUseCase @Inject constructor(
     private val local: LocalStateRepository,
     private val pauseScheduler: PauseScheduler,
     private val reminderScheduler: ReminderScheduler,
+    private val phrases: GetPhraseUseCase,
 ) {
     suspend operator fun invoke() {
         auth.signOut()
@@ -23,5 +24,6 @@ class SignOutUseCase @Inject constructor(
         pauseScheduler.cancelHydration()
         reminderScheduler.cancel()
         local.clearUserScopedState()
+        phrases.clear()
     }
 }

@@ -39,8 +39,6 @@ class LocalStateRepositoryImpl @Inject constructor(
         val MEETING_DAYS = stringSetPreferencesKey("meeting_days")
         val HYDRATION_ACTIVE = booleanPreferencesKey("hydration_active")
         val HYDRATION_INTERVAL = intPreferencesKey("hydration_interval")
-        val PHRASE_INDEX = intPreferencesKey("phrase_index")
-        val PHRASE_AT = longPreferencesKey("phrase_at")
         val APARIENCIA_TEMA = stringPreferencesKey("apariencia_tema")
         val APARIENCIA_ESCALA = stringPreferencesKey("apariencia_escala")
         fun migrated(uid: String) = booleanPreferencesKey("migrated_$uid")
@@ -129,11 +127,6 @@ class LocalStateRepositoryImpl @Inject constructor(
         }
     }
 
-    override val lastPhraseIndex: Flow<Int?> = store.data.map { it[Keys.PHRASE_INDEX] }
-    override suspend fun setLastPhraseIndex(index: Int) { store.edit { it[Keys.PHRASE_INDEX] = index } }
-    override suspend fun lastPhraseAt(): Long? = store.data.first()[Keys.PHRASE_AT]
-    override suspend fun setLastPhraseAt(at: Long) { store.edit { it[Keys.PHRASE_AT] = at } }
-
     override val apariencia: Flow<AparienciaApp> = store.data.map { prefs ->
         AparienciaApp(
             tema = runCatching { TemaApp.valueOf(prefs[Keys.APARIENCIA_TEMA] ?: "") }
@@ -162,8 +155,6 @@ class LocalStateRepositoryImpl @Inject constructor(
             it.remove(Keys.MEETING_DAYS)
             it.remove(Keys.HYDRATION_ACTIVE)
             it.remove(Keys.HYDRATION_INTERVAL)
-            it.remove(Keys.PHRASE_INDEX)
-            it.remove(Keys.PHRASE_AT)
         }
     }
 
