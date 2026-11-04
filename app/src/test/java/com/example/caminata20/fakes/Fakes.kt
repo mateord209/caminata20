@@ -9,6 +9,9 @@ import com.example.caminata20.domain.model.Outcome
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseSettings
 import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.model.Phrase
+import com.example.caminata20.domain.model.PhraseCategory
+import com.example.caminata20.domain.model.PhraseState
 import com.example.caminata20.domain.model.Profile
 import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.ReminderTime
@@ -22,6 +25,8 @@ import com.example.caminata20.domain.repository.MeetingDayRepository
 import com.example.caminata20.domain.repository.PauseHistoryRepository
 import com.example.caminata20.domain.repository.PauseNotificationGateway
 import com.example.caminata20.domain.repository.PauseScheduler
+import com.example.caminata20.domain.repository.PhraseRepository
+import com.example.caminata20.domain.repository.PhraseStateStore
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.domain.repository.ProfileRepository
 import com.example.caminata20.domain.repository.ReminderScheduler
@@ -144,13 +149,6 @@ class FakeLocalState : LocalStateRepository {
     override suspend fun cachedHidratacion() = hidratacion
     override suspend fun cacheHidratacion(config: ConfigHidratacion) { hidratacion = config }
 
-    val phraseIndex = MutableStateFlow<Int?>(null)
-    override val lastPhraseIndex: Flow<Int?> = phraseIndex
-    override suspend fun setLastPhraseIndex(index: Int) { phraseIndex.value = index }
-    private var phraseAt: Long? = null
-    override suspend fun lastPhraseAt() = phraseAt
-    override suspend fun setLastPhraseAt(at: Long) { phraseAt = at }
-
     val aparienciaState = MutableStateFlow(AparienciaApp())
     override val apariencia: Flow<AparienciaApp> = aparienciaState
     override suspend fun saveApariencia(apariencia: AparienciaApp) { aparienciaState.value = apariencia }
@@ -168,6 +166,33 @@ class FakeMeetingDayRepository(initial: Set<Long> = emptySet()) : MeetingDayRepo
         prunedBefore = before
         items.update { current -> current.filter { it >= before }.toSet() }
     }
+}
+
+class FakePhraseRepository(
+    val phrase: MutableStateFlow<Phrase> = MutableStateFlow(
+        Phrase("p01", "Frase de prueba", PhraseCategory.MOTIVACIONAL),
+    ),
+) : PhraseRepository {
+    var nextCalls = 0
+    var cleared = false
+    override fun current(): Flow<Phrase> = phrase
+    override suspend fun next(): Phrase {
+        nextCalls++
+        return phrase.value
+    }
+    override suspend fun clear() {
+        cleared = true
+        phrase.value = Phrase("p01", "Frase de prueba", PhraseCategory.MOTIVACIONAL)
+    }
+}
+
+class FakePhraseStateStore(
+    initial: PhraseState = PhraseState(null, null),
+) : PhraseStateStore {
+    val stateFlow = MutableStateFlow(initial)
+    override fun state(): Flow<PhraseState> = stateFlow
+    override suspend fun save(id: String, at: Long) { stateFlow.value = PhraseState(id, at) }
+    override suspend fun clear() { stateFlow.value = PhraseState(null, null) }
 }
 
 class FakePauseScheduler : PauseScheduler {

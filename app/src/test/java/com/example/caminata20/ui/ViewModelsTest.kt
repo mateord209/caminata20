@@ -9,6 +9,8 @@ import com.example.caminata20.domain.model.Outcome
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.model.Phrase
+import com.example.caminata20.domain.model.PhraseCategory
 import com.example.caminata20.domain.model.Profile
 import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.TemaApp
@@ -16,7 +18,7 @@ import com.example.caminata20.domain.model.WalkSession
 import com.example.caminata20.domain.time.DayWindowCalculator
 import com.example.caminata20.domain.usecase.CalculateStreakUseCase
 import com.example.caminata20.domain.usecase.Clock
-import com.example.caminata20.domain.usecase.FraseMotivacionalUseCase
+import com.example.caminata20.domain.usecase.GetPhraseUseCase
 import com.example.caminata20.domain.usecase.MarkMeetingDayUseCase
 import com.example.caminata20.domain.usecase.ObserveStreakUseCase
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
@@ -33,6 +35,7 @@ import com.example.caminata20.fakes.FakeMeetingDayRepository
 import com.example.caminata20.fakes.FakeNotifications
 import com.example.caminata20.fakes.FakePauseHistoryRepository
 import com.example.caminata20.fakes.FakePauseScheduler
+import com.example.caminata20.fakes.FakePhraseRepository
 import com.example.caminata20.fakes.FakePreferencesRepository
 import com.example.caminata20.fakes.FakeProfileRepository
 import com.example.caminata20.fakes.FakeReminderScheduler
@@ -230,7 +233,7 @@ class ViewModelsTest {
     @Test
     fun `perfil valida nombre, limita la meta y cierra sesion`() = runTest {
         val repo = FakeProfileRepository(); val auth = FakeAuthRepository(); val local = FakeLocalState()
-        val vm = ProfileViewModel(repo, SignOutUseCase(auth, local, FakePauseScheduler(), FakeReminderScheduler()))
+        val vm = ProfileViewModel(repo, SignOutUseCase(auth, local, FakePauseScheduler(), FakeReminderScheduler(), GetPhraseUseCase(FakePhraseRepository())))
         vm.onNameChange("  "); vm.save()
         assertEquals("El nombre no puede estar vacío", vm.state.value.nameError)
         vm.onGoalChange(40)
@@ -346,7 +349,7 @@ class ViewModelsTest {
     fun `inicio calcula totales desde las caminatas`() = runTest {
         val walks = FakeWalkRepository()
         val local = FakeLocalState()
-        val vm = HomeViewModel(FakeProfileRepository(), walks, FakePreferencesRepository(), local, observeStreakUseCase(), FraseMotivacionalUseCase(local))
+        val vm = HomeViewModel(FakeProfileRepository(), walks, FakePreferencesRepository(), local, observeStreakUseCase(), GetPhraseUseCase(FakePhraseRepository()))
         keep(vm.state)
         walks.add(WalkSession(System.currentTimeMillis(), 1000, 0.75))
         walks.add(WalkSession(System.currentTimeMillis(), 500, 0.25))
@@ -356,10 +359,26 @@ class ViewModelsTest {
     }
 
     @Test
+    fun `HU-07 el tip de inicio sale del flow de frases`() = runTest {
+        val phrases = FakePhraseRepository()
+        val vm = HomeViewModel(
+            FakeProfileRepository(), FakeWalkRepository(), FakePreferencesRepository(),
+            FakeLocalState(), observeStreakUseCase(), GetPhraseUseCase(phrases),
+        )
+        keep(vm.state)
+        advanceUntilIdle()
+        assertEquals("Frase de prueba", vm.state.value.motivationalPhrase)
+
+        phrases.phrase.value = Phrase("p02", "Nueva frase", PhraseCategory.ERGONOMICA)
+        advanceUntilIdle()
+        assertEquals("Nueva frase", vm.state.value.motivationalPhrase)
+    }
+
+    @Test
     fun `HU-08 inicio refleja al instante el cambio de tipo de pausa`() = runTest {
         val prefs = FakePreferencesRepository()
         val local = FakeLocalState()
-        val home = HomeViewModel(FakeProfileRepository(), FakeWalkRepository(), prefs, local, observeStreakUseCase(prefs = prefs), FraseMotivacionalUseCase(local))
+        val home = HomeViewModel(FakeProfileRepository(), FakeWalkRepository(), prefs, local, observeStreakUseCase(prefs = prefs), GetPhraseUseCase(FakePhraseRepository()))
         keep(home.state)
         assertEquals(PauseType.ESTIRAMIENTO, home.state.value.pauseSettings.type)
 
@@ -390,7 +409,7 @@ class ViewModelsTest {
         repeat(3) { history.add(PauseRecord(yesterday, PauseType.ESTIRAMIENTO, PauseStatus.COMPLETADA)) }
         val vm = HomeViewModel(
             profile, FakeWalkRepository(), prefs, local,
-            observeStreakUseCase(profile, history, prefs), FraseMotivacionalUseCase(local),
+            observeStreakUseCase(profile, history, prefs), GetPhraseUseCase(FakePhraseRepository()),
         )
         keep(vm.state)
 

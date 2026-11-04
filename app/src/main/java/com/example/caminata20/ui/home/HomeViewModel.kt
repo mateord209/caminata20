@@ -9,16 +9,14 @@ import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.domain.repository.ProfileRepository
 import com.example.caminata20.domain.repository.WalkRepository
-import com.example.caminata20.domain.usecase.FraseMotivacionalUseCase
+import com.example.caminata20.domain.usecase.GetPhraseUseCase
 import com.example.caminata20.domain.usecase.ObserveStreakUseCase
 import com.example.caminata20.domain.usecase.WalkStatsCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class HomeUiState(
@@ -39,13 +37,8 @@ class HomeViewModel @Inject constructor(
     prefs: PreferencesRepository,
     local: LocalStateRepository,
     streakUseCase: ObserveStreakUseCase,
-    private val fraseUseCase: FraseMotivacionalUseCase,
+    phraseUseCase: GetPhraseUseCase,
 ) : ViewModel() {
-    private val phrase = MutableStateFlow("")
-
-    init {
-        viewModelScope.launch { phrase.value = fraseUseCase.actualizarSiCorresponde() }
-    }
 
     val state: StateFlow<HomeUiState> = combine(
         combine(profile.profile, walks.sessions, prefs.pauseSettings) { p, sessions, settings ->
@@ -54,14 +47,14 @@ class HomeViewModel @Inject constructor(
         prefs.reminderSchedule,
         local.meetingUntil,
         streakUseCase(),
-        phrase,
-    ) { triple, schedule, meetingUntil, streak, frase ->
+        phraseUseCase.current(),
+    ) { triple, schedule, meetingUntil, streak, phrase ->
         val (p, sessions, settings) = triple
         HomeUiState(
             userName = p.name.ifBlank { p.email.ifBlank { "Invitado" } },
             stats = WalkStatsCalculator.compute(sessions),
             pauseSettings = settings,
-            motivationalPhrase = frase,
+            motivationalPhrase = phrase.text,
             meetingActive = meetingUntil != null && meetingUntil > System.currentTimeMillis(),
             intervalMin = schedule.intervalMin,
             streak = streak,

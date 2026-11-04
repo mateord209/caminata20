@@ -1,6 +1,7 @@
 package com.example.caminata20.di
 
 import com.example.caminata20.BuildConfig
+import com.example.caminata20.data.local.DataStorePhraseStateStore
 import com.example.caminata20.data.local.LocalStateRepositoryImpl
 import com.example.caminata20.data.remote.GroqConfig
 import com.example.caminata20.data.remote.GroqExerciseGenerator
@@ -13,6 +14,7 @@ import com.example.caminata20.data.repository.FirestorePauseHistoryRepository
 import com.example.caminata20.data.repository.FirestorePreferencesRepository
 import com.example.caminata20.data.repository.FirestoreProfileRepository
 import com.example.caminata20.data.repository.FirestoreWalkRepository
+import com.example.caminata20.data.repository.LocalPhraseRepository
 import com.example.caminata20.data.system.AlarmPauseScheduler
 import com.example.caminata20.data.system.AlarmReminderScheduler
 import com.example.caminata20.domain.repository.AiExerciseGenerator
@@ -23,6 +25,8 @@ import com.example.caminata20.domain.repository.MeetingDayRepository
 import com.example.caminata20.domain.repository.PauseHistoryRepository
 import com.example.caminata20.domain.repository.PauseNotificationGateway
 import com.example.caminata20.domain.repository.PauseScheduler
+import com.example.caminata20.domain.repository.PhraseRepository
+import com.example.caminata20.domain.repository.PhraseStateStore
 import com.example.caminata20.domain.repository.PreferencesRepository
 import com.example.caminata20.domain.repository.ProfileRepository
 import com.example.caminata20.domain.repository.ReminderScheduler
@@ -48,6 +52,7 @@ import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Singleton
+import kotlin.random.Random
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -94,6 +99,10 @@ object NetworkModule {
 
     @Provides @Singleton
     fun timeZone(): TimeZone = TimeZone.getDefault()
+
+    /** HU-07: aleatoriedad inyectable para elegir la frase de la notificación. */
+    @Provides @Singleton
+    fun random(): Random = Random.Default
 }
 
 @Module
@@ -108,6 +117,8 @@ abstract class RepositoryModule {
     @Binds abstract fun aiGenerator(impl: GroqExerciseGenerator): AiExerciseGenerator
     @Binds abstract fun local(impl: LocalStateRepositoryImpl): LocalStateRepository
     @Binds abstract fun meetingDays(impl: FirestoreMeetingDayRepository): MeetingDayRepository
+    @Binds abstract fun phrases(impl: LocalPhraseRepository): PhraseRepository
+    @Binds abstract fun phraseState(impl: DataStorePhraseStateStore): PhraseStateStore
     @Binds abstract fun pauseScheduler(impl: AlarmPauseScheduler): PauseScheduler
     @Binds abstract fun reminderScheduler(impl: AlarmReminderScheduler): ReminderScheduler
     @Binds abstract fun pauseNotifications(impl: PauseNotifier): PauseNotificationGateway
