@@ -1,0 +1,16 @@
+appId: com.example.caminata20
+---
+# Requiere TEST_EMAIL y TEST_PASSWORD: maestro test -e TEST_EMAIL=... -e TEST_PASSWORD=... .maestro/streak.yaml
+- launchApp:
+    clearState: true
+- tapOn:
+    text: "Omitir"
+    optional: true
+- tapOn: "Correo"
+- inputText: ${TEST_EMAIL}
+- tapOn: "Contraseña"
+- inputText: ${TEST_PASSWORD}
+- tapOn: "Ingresar"
+- assertVisible: "Racha actual"
+- assertVisible: ".*Hoy:.*"
+- takeScreenshot: dashboard-racha
