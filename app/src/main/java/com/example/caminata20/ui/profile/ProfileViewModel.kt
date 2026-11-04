@@ -3,8 +3,8 @@ package com.example.caminata20.ui.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.caminata20.domain.model.Profile
-import com.example.caminata20.domain.repository.AuthRepository
 import com.example.caminata20.domain.repository.ProfileRepository
+import com.example.caminata20.domain.usecase.SignOutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,7 +30,7 @@ data class ProfileUiState(
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val repo: ProfileRepository,
-    private val auth: AuthRepository,
+    private val signOutUseCase: SignOutUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ProfileUiState())
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
@@ -64,7 +64,9 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun signOut() {
-        auth.signOut()
-        _state.update { it.copy(signedOut = true) }
+        viewModelScope.launch {
+            signOutUseCase()
+            _state.update { it.copy(signedOut = true) }
+        }
     }
 }

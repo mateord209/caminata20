@@ -61,6 +61,22 @@ class FirestoreProfileRepository @Inject constructor(
         val uid = paths.uid() ?: return
         paths.userDoc(uid).set(mapOf("dailyGoal" to goal.coerceIn(Profile.GOAL_RANGE), "updatedAt" to FieldValue.serverTimestamp()), SetOptions.merge())
     }
+
+    /**
+     * HU-10: crea `users/{uid}` de forma idempotente si el usuario recién se registró.
+     * No escribe `dailyGoal`: el modelo aplica 8 por defecto y así no se pisa una meta existente.
+     */
+    override suspend fun ensureProfile(name: String, email: String) {
+        val uid = paths.uid() ?: return
+        paths.userDoc(uid).set(
+            mapOf(
+                "name" to name.trim(),
+                "email" to email.trim(),
+                "updatedAt" to FieldValue.serverTimestamp(),
+            ),
+            SetOptions.merge(),
+        )
+    }
 }
 
 @Singleton

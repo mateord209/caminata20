@@ -46,9 +46,15 @@ class FakeAuthRepository(var result: Outcome<AuthUser> = Outcome.Success(AuthUse
 
 class FakeProfileRepository(initial: Profile = Profile("Ana", "ana@x.com", 8)) : ProfileRepository {
     val state = MutableStateFlow(initial)
+    var ensuredProfile: Pair<String, String>? = null
+    var ensureFailure: Throwable? = null
     override val profile: Flow<Profile> = state
     override suspend fun saveName(name: String) = state.update { it.copy(name = name) }
     override suspend fun saveGoal(goal: Int) = state.update { it.copy(dailyGoal = goal) }
+    override suspend fun ensureProfile(name: String, email: String) {
+        ensuredProfile = name to email
+        ensureFailure?.let { throw it }
+    }
 }
 
 class FakePreferencesRepository : PreferencesRepository {
@@ -149,6 +155,9 @@ class FakeLocalState : LocalStateRepository {
     val aparienciaState = MutableStateFlow(AparienciaApp())
     override val apariencia: Flow<AparienciaApp> = aparienciaState
     override suspend fun saveApariencia(apariencia: AparienciaApp) { aparienciaState.value = apariencia }
+
+    var userStateCleared = false
+    override suspend fun clearUserScopedState() { userStateCleared = true }
 }
 
 class FakePauseScheduler : PauseScheduler {
