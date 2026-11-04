@@ -162,13 +162,15 @@ class FakeLocalState : LocalStateRepository {
 
 class FakePauseScheduler : PauseScheduler {
     var restarts = 0
+    var cancelled = false
+    var hydrationCancelled = false
     val scheduled = mutableListOf<Int>()
     override fun restart() { restarts++ }
     override fun scheduleIn(minutes: Int) { scheduled += minutes }
-    override fun cancel() {}
+    override fun cancel() { cancelled = true }
     override fun applySchedule(config: ReminderScheduleConfig, meetingUntil: Long?) { restarts++ }
     override fun scheduleHydration(config: ConfigHidratacion) {}
-    override fun cancelHydration() {}
+    override fun cancelHydration() { hydrationCancelled = true }
 }
 
 class FakeReminderScheduler : ReminderScheduler {

@@ -39,8 +39,15 @@ class FirebaseAuthRepository @Inject constructor(
 
     override suspend fun register(name: String, email: String, password: String): Outcome<AuthUser> = runAuth {
         val user = auth.createUserWithEmailAndPassword(email, password).await().user
-        user?.updateProfile(userProfileChangeRequest { displayName = name })?.await()
-        auth.currentUser
+            ?: throw IllegalStateException("Sin usuario")
+        try {
+            user.updateProfile(userProfileChangeRequest { displayName = name }).await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // El nombre se reintenta con ensureProfile; no se revierte la cuenta creada.
+        }
+        user
     }
 
     override suspend fun sendPasswordReset(email: String): Outcome<Unit> = try {
@@ -54,7 +61,13 @@ class FirebaseAuthRepository @Inject constructor(
     }
 
     override suspend fun updateDisplayName(name: String) {
-        runCatching { auth.currentUser?.updateProfile(userProfileChangeRequest { displayName = name })?.await() }
+        try {
+            auth.currentUser?.updateProfile(userProfileChangeRequest { displayName = name })?.await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // El nombre local ya se guardó; Firestore lo reintenta en el próximo guardado.
+        }
     }
 
     override fun signOut() = auth.signOut()

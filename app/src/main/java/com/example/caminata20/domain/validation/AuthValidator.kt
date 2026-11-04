@@ -65,22 +65,16 @@ class AuthValidator @Inject constructor() {
         }
     }
 
-    private fun validatePassword(password: String): AuthFieldError? {
-        val value = password.trim()
-        return when {
-            value.isEmpty() -> AuthFieldError.PASSWORD_REQUIRED
-            value.length < MIN_PASSWORD_LENGTH -> AuthFieldError.PASSWORD_TOO_SHORT
-            else -> null
-        }
+    private fun validatePassword(password: String): AuthFieldError? = when {
+        password.isEmpty() -> AuthFieldError.PASSWORD_REQUIRED
+        password.length < MIN_PASSWORD_LENGTH -> AuthFieldError.PASSWORD_TOO_SHORT
+        else -> null
     }
 
-    private fun validateConfirm(password: String, confirm: String): AuthFieldError? {
-        val value = confirm.trim()
-        return when {
-            value.isEmpty() -> AuthFieldError.CONFIRM_REQUIRED
-            value != password.trim() -> AuthFieldError.CONFIRM_MISMATCH
-            else -> null
-        }
+    private fun validateConfirm(password: String, confirm: String): AuthFieldError? = when {
+        confirm.isEmpty() -> AuthFieldError.CONFIRM_REQUIRED
+        confirm != password -> AuthFieldError.CONFIRM_MISMATCH
+        else -> null
     }
 
     companion object {

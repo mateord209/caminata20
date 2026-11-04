@@ -1,6 +1,7 @@
 package com.example.caminata20.data.repository
 
 import com.example.caminata20.domain.model.AuthError
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuthException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,6 +16,7 @@ class AuthErrorMapper @Inject constructor() {
     fun mapCode(code: String?, fallback: String = AuthError.DEFAULT_MESSAGE): AuthError = when (code) {
         ERROR_INVALID_EMAIL -> AuthError.InvalidEmail
         ERROR_WRONG_PASSWORD -> AuthError.WrongPassword
+        ERROR_INVALID_CREDENTIAL -> AuthError.WrongPassword
         ERROR_USER_NOT_FOUND -> AuthError.UserNotFound
         ERROR_NETWORK_REQUEST_FAILED -> AuthError.Network
         ERROR_TOO_MANY_REQUESTS -> AuthError.TooManyRequests
@@ -25,6 +27,9 @@ class AuthErrorMapper @Inject constructor() {
     }
 
     fun map(throwable: Throwable): AuthError {
+        if (throwable is FirebaseNetworkException || throwable.cause is FirebaseNetworkException) {
+            return AuthError.Network
+        }
         val code = (throwable as? FirebaseAuthException)?.errorCode
             ?: (throwable.cause as? FirebaseAuthException)?.errorCode
         return mapCode(code)
@@ -33,6 +38,7 @@ class AuthErrorMapper @Inject constructor() {
     companion object {
         const val ERROR_INVALID_EMAIL = "ERROR_INVALID_EMAIL"
         const val ERROR_WRONG_PASSWORD = "ERROR_WRONG_PASSWORD"
+        const val ERROR_INVALID_CREDENTIAL = "ERROR_INVALID_CREDENTIAL"
         const val ERROR_USER_NOT_FOUND = "ERROR_USER_NOT_FOUND"
         const val ERROR_NETWORK_REQUEST_FAILED = "ERROR_NETWORK_REQUEST_FAILED"
         const val ERROR_TOO_MANY_REQUESTS = "ERROR_TOO_MANY_REQUESTS"

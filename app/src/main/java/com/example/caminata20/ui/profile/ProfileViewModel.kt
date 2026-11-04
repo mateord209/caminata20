@@ -65,7 +65,13 @@ class ProfileViewModel @Inject constructor(
 
     fun signOut() {
         viewModelScope.launch {
-            signOutUseCase()
+            try {
+                signOutUseCase()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Aunque falle la limpieza local, la sesión ya se cerró y hay que volver al login.
+            }
             _state.update { it.copy(signedOut = true) }
         }
     }

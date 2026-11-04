@@ -89,6 +89,12 @@ class AuthValidatorTest {
     }
 
     @Test
+    fun `contrasena con espacios se conserva y es valida`() {
+        val errors = validator.validateRegister("Ana", "ana@x.com", " 12345 ", " 12345 ")
+        assertFalse(errors.hasErrors)
+    }
+
+    @Test
     fun `recuperacion valida solo el correo`() {
         val invalido = validator.validateForgot("ana@")
         assertEquals(AuthFieldError.EMAIL_INVALID, invalido.email)

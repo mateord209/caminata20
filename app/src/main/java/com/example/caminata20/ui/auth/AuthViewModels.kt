@@ -37,9 +37,10 @@ class LoginViewModel @Inject constructor(
     fun consumeMessage() = _state.update { it.copy(message = null) }
 
     fun signIn() {
+        if (_state.value.loading) return
         val s = _state.value
         val email = s.email.trim()
-        val pass = s.password.trim()
+        val pass = s.password
         val errors = validator.validateLogin(email, pass)
         if (errors.hasErrors) {
             _state.update {
@@ -58,6 +59,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun signInWithGoogle(idToken: String?) {
+        if (_state.value.loading) return
         if (idToken == null) {
             _state.update { it.copy(message = "Google Sign-In cancelado o falló") }
             return
@@ -113,11 +115,12 @@ class RegisterViewModel @Inject constructor(
     fun consumeMessage() = _state.update { it.copy(message = null) }
 
     fun register() {
+        if (_state.value.loading) return
         val s = _state.value
         val name = s.name.trim()
         val email = s.email.trim()
-        val pass = s.password.trim()
-        val confirm = s.confirm.trim()
+        val pass = s.password
+        val confirm = s.confirm
         val errors = validator.validateRegister(name, email, pass, confirm)
         if (errors.hasErrors) {
             _state.update {
@@ -172,6 +175,7 @@ class ForgotPasswordViewModel @Inject constructor(
     fun consumeMessage() = _state.update { it.copy(message = null) }
 
     fun send() {
+        if (_state.value.loading) return
         val email = _state.value.email.trim()
         val errors = validator.validateForgot(email)
         if (errors.hasErrors) {

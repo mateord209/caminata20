@@ -13,6 +13,7 @@ class AuthErrorMapperTest {
         val casos = mapOf(
             AuthErrorMapper.ERROR_INVALID_EMAIL to AuthError.InvalidEmail,
             AuthErrorMapper.ERROR_WRONG_PASSWORD to AuthError.WrongPassword,
+            AuthErrorMapper.ERROR_INVALID_CREDENTIAL to AuthError.WrongPassword,
             AuthErrorMapper.ERROR_USER_NOT_FOUND to AuthError.UserNotFound,
             AuthErrorMapper.ERROR_NETWORK_REQUEST_FAILED to AuthError.Network,
             AuthErrorMapper.ERROR_TOO_MANY_REQUESTS to AuthError.TooManyRequests,
