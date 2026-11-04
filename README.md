@@ -18,6 +18,28 @@ Requisitos: JDK 17 y Android SDK (compileSdk 36).
 (`KEYSTORE_FILE`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`). Ver `docs/SEGURIDAD_GROQ.md`
 sobre el riesgo de embeber `GROQ_API_KEY` en el APK.
 
+## Flujo de trabajo (git flow pequeño)
+
+- `main`: releases estables y tags `v*`.
+- `develop`: integración del sprint; las PR de features entran aquí.
+- Ramas cortas: `feature/hu-XX-descripcion`, `fix/...`, `docs/...`, `chore/...`.
+- Commits convencionales: `feat(hu-10): ...`, `test(hu-17): ...`, `fix(hu-10): ...`.
+- CI: tests + build en PR a `develop`/`main`; prerelease `latest-dev` desde `develop`; release
+  `latest` desde `main`.
+- Reglas de arquitectura y SOLID: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+- Diseño por HU: [`docs/design/`](docs/design/).
+
+## Pruebas
+
+```bash
+./gradlew testDebugUnitTest          # unitarios JVM
+./gradlew connectedDebugAndroidTest  # Compose UI (requiere emulador)
+maestro test .maestro                # E2E (requiere Maestro CLI)
+```
+
+Los tests unitarios no llaman a Firebase ni a un emulador. Los flujos Maestro usan variables de
+entorno para las credenciales de la cuenta de prueba.
+
 ## CI: build y publicación de la release
 
 Workflow: [`.github/workflows/android-release.yml`](.github/workflows/android-release.yml).
