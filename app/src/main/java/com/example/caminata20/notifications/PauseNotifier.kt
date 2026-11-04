@@ -16,6 +16,7 @@ import com.example.caminata20.data.local.ExerciseCatalog
 import com.example.caminata20.domain.repository.LocalStateRepository
 import com.example.caminata20.domain.repository.PauseNotificationGateway
 import com.example.caminata20.domain.repository.PreferencesRepository
+import com.example.caminata20.domain.usecase.GetPhraseUseCase
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
 import com.example.caminata20.ui.Routes
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -29,6 +30,7 @@ class PauseNotifier @Inject constructor(
     @ApplicationContext private val context: Context,
     private val prefs: PreferencesRepository,
     private val local: LocalStateRepository,
+    private val phraseUseCase: GetPhraseUseCase,
 ) : PauseNotificationGateway {
 
     /** HU-14: recordatorio de hidratación independiente del tipo de pausa. */
@@ -55,6 +57,18 @@ class PauseNotifier @Inject constructor(
         val exercise = ExerciseCatalog.next(type, local.lastExerciseId.first())
         local.setLastExercise(exercise.id)
 
+        // HU-07: la frase se elige al mostrar la notificación y se persiste como última vista.
+        val phrase = phraseUseCase.forNotification()
+        val content = buildPauseNotificationContent(
+            typeEmoji = type.emoji,
+            typeTitle = type.notificationTitle,
+            exerciseName = exercise.name,
+            instructions = exercise.instructions,
+            durationLabel = exercise.durationLabel,
+            area = exercise.area,
+            phrase = phrase.text,
+        )
+
         val openGuideIntent = Intent(context, MainActivity::class.java)
             .putExtra(MainActivity.EXTRA_ROUTE, Routes.guide(exercise.id))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
@@ -64,14 +78,14 @@ class PauseNotifier @Inject constructor(
 
         val n = NotificationCompat.Builder(context, NotificationHelper.CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("${type.emoji} ${type.notificationTitle}")
-            .setContentText("${exercise.name} · ${exercise.durationLabel}")
+            .setContentTitle(content.title)
+            .setContentText(content.text)
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .setBigContentTitle("${type.emoji} ${type.notificationTitle} — ${exercise.name}")
-                    .bigText("${exercise.instructions}\n(${exercise.durationLabel} · ${exercise.area})")
+                    .setBigContentTitle(content.bigTitle)
+                    .bigText(content.bigText)
             )
-            .setSubText(type.title)
+            .setSubText(content.subText)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVibrate(longArrayOf(0, 500, 200, 500, 200, 500))

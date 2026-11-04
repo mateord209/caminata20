@@ -9,11 +9,13 @@ import com.example.caminata20.domain.model.Outcome
 import com.example.caminata20.domain.model.PauseRecord
 import com.example.caminata20.domain.model.PauseStatus
 import com.example.caminata20.domain.model.PauseType
+import com.example.caminata20.domain.model.Phrase
+import com.example.caminata20.domain.model.PhraseCategory
 import com.example.caminata20.domain.model.ReminderScheduleConfig
 import com.example.caminata20.domain.model.TemaApp
 import com.example.caminata20.domain.model.WalkSession
 import com.example.caminata20.domain.usecase.Clock
-import com.example.caminata20.domain.usecase.FraseMotivacionalUseCase
+import com.example.caminata20.domain.usecase.GetPhraseUseCase
 import com.example.caminata20.domain.usecase.PauseActionsUseCase
 import com.example.caminata20.domain.usecase.PauseScheduleSync
 import com.example.caminata20.fakes.FakeAiRoutineRepository
@@ -23,6 +25,7 @@ import com.example.caminata20.fakes.FakeLocalState
 import com.example.caminata20.fakes.FakeNotifications
 import com.example.caminata20.fakes.FakePauseHistoryRepository
 import com.example.caminata20.fakes.FakePauseScheduler
+import com.example.caminata20.fakes.FakePhraseRepository
 import com.example.caminata20.fakes.FakePreferencesRepository
 import com.example.caminata20.fakes.FakeProfileRepository
 import com.example.caminata20.fakes.FakeReminderScheduler
@@ -289,7 +292,7 @@ class ViewModelsTest {
     fun `inicio calcula totales desde las caminatas`() = runTest {
         val walks = FakeWalkRepository()
         val local = FakeLocalState()
-        val vm = HomeViewModel(FakeProfileRepository(), walks, FakePreferencesRepository(), local, FraseMotivacionalUseCase(local))
+        val vm = HomeViewModel(FakeProfileRepository(), walks, FakePreferencesRepository(), local, GetPhraseUseCase(FakePhraseRepository()))
         keep(vm.state)
         walks.add(WalkSession(System.currentTimeMillis(), 1000, 0.75))
         walks.add(WalkSession(System.currentTimeMillis(), 500, 0.25))
@@ -299,10 +302,26 @@ class ViewModelsTest {
     }
 
     @Test
+    fun `HU-07 el tip de inicio sale del flow de frases`() = runTest {
+        val phrases = FakePhraseRepository()
+        val vm = HomeViewModel(
+            FakeProfileRepository(), FakeWalkRepository(), FakePreferencesRepository(),
+            FakeLocalState(), GetPhraseUseCase(phrases),
+        )
+        keep(vm.state)
+        advanceUntilIdle()
+        assertEquals("Frase de prueba", vm.state.value.motivationalPhrase)
+
+        phrases.phrase.value = Phrase("p02", "Nueva frase", PhraseCategory.ERGONOMICA)
+        advanceUntilIdle()
+        assertEquals("Nueva frase", vm.state.value.motivationalPhrase)
+    }
+
+    @Test
     fun `HU-08 inicio refleja al instante el cambio de tipo de pausa`() = runTest {
         val prefs = FakePreferencesRepository()
         val local = FakeLocalState()
-        val home = HomeViewModel(FakeProfileRepository(), FakeWalkRepository(), prefs, local, FraseMotivacionalUseCase(local))
+        val home = HomeViewModel(FakeProfileRepository(), FakeWalkRepository(), prefs, local, GetPhraseUseCase(FakePhraseRepository()))
         keep(home.state)
         assertEquals(PauseType.ESTIRAMIENTO, home.state.value.pauseSettings.type)
 
