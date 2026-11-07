@@ -2,10 +2,10 @@ name: Android release
 
 on:
   push:
-    branches: [main, developRamirez]
+    branches: [main, develop]
     tags: ['v*']
   pull_request:
-    branches: [main]
+    branches: [main, develop]
   workflow_dispatch:
 
 permissions:
@@ -115,7 +115,7 @@ jobs:
 
       # ---------- Publicación ----------
       - name: Mover el tag rodante (latest / latest-dev)
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/developRamirez')
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         id: rolling
         env:
           GH_TOKEN: ${{ github.token }}
@@ -147,8 +147,8 @@ jobs:
             Firma: **${{ steps.signing.outputs.suffix }}**.
           files: dist/*
 
-      - name: Prerelease rodante (push a developRamirez → latest-dev)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/developRamirez'
+      - name: Prerelease rodante (push a develop → latest-dev)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest-dev
@@ -157,6 +157,6 @@ jobs:
           prerelease: true
           make_latest: 'false'
           body: |
-            Prerelease rodante de `developRamirez` en ${{ github.sha }} (ejecución #${{ github.run_number }}).
+            Prerelease rodante de `develop` en ${{ github.sha }} (ejecución #${{ github.run_number }}).
             Firma: **${{ steps.signing.outputs.suffix }}**. Se reemplaza en cada push.
           files: dist/*

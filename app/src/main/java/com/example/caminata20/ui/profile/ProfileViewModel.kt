@@ -3,8 +3,9 @@ package com.example.caminata20.ui.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.caminata20.domain.model.Profile
-import com.example.caminata20.domain.repository.AuthRepository
 import com.example.caminata20.domain.repository.ProfileRepository
+import com.example.caminata20.domain.usecase.SaveGoalUseCase
+import com.example.caminata20.domain.usecase.SignOutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,7 +31,8 @@ data class ProfileUiState(
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val repo: ProfileRepository,
-    private val auth: AuthRepository,
+    private val saveGoalUseCase: SaveGoalUseCase,
+    private val signOutUseCase: SignOutUseCase,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ProfileUiState())
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
@@ -44,10 +46,12 @@ class ProfileViewModel @Inject constructor(
 
     fun onNameChange(v: String) = _state.update { it.copy(name = v, nameError = null, saved = false) }
 
-    /** La meta se guarda al instante para que Mi Día actualice la barra sin esperar. */
+    /** La meta se guarda al instante y queda registrada para los días ya cerrados (HU-17). */
     fun onGoalChange(v: Int) {
-        _state.update { it.copy(goal = v.coerceIn(Profile.GOAL_RANGE), saved = false) }
-        viewModelScope.launch { repo.saveGoal(_state.value.goal) }
+        val old = _state.value.goal
+        val goal = v.coerceIn(Profile.GOAL_RANGE)
+        _state.update { it.copy(goal = goal, saved = false) }
+        viewModelScope.launch { saveGoalUseCase(old, goal) }
     }
 
     fun save() {
@@ -57,14 +61,22 @@ class ProfileViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
+            // La meta ya se persiste (y se registra en el historial) al cambiarla.
             repo.saveName(s.name)
-            repo.saveGoal(s.goal)
             _state.update { it.copy(saved = true) }
         }
     }
 
     fun signOut() {
-        auth.signOut()
-        _state.update { it.copy(signedOut = true) }
+        viewModelScope.launch {
+            try {
+                signOutUseCase()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // Aunque falle la limpieza local, la sesión ya se cerró y hay que volver al login.
+            }
+            _state.update { it.copy(signedOut = true) }
+        }
     }
 }

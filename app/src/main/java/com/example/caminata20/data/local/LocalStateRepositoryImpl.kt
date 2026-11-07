@@ -5,7 +5,6 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.caminata20.domain.model.AparienciaApp
 import com.example.caminata20.domain.model.ConfigHidratacion
@@ -36,11 +35,8 @@ class LocalStateRepositoryImpl @Inject constructor(
         val INTERVAL_MIN = intPreferencesKey("interval_min")
         val ACTIVE_DAYS = intPreferencesKey("active_days_mask")
         val MEETING_UNTIL = longPreferencesKey("meeting_until")
-        val MEETING_DAYS = stringSetPreferencesKey("meeting_days")
         val HYDRATION_ACTIVE = booleanPreferencesKey("hydration_active")
         val HYDRATION_INTERVAL = intPreferencesKey("hydration_interval")
-        val PHRASE_INDEX = intPreferencesKey("phrase_index")
-        val PHRASE_AT = longPreferencesKey("phrase_at")
         val APARIENCIA_TEMA = stringPreferencesKey("apariencia_tema")
         val APARIENCIA_ESCALA = stringPreferencesKey("apariencia_escala")
         fun migrated(uid: String) = booleanPreferencesKey("migrated_$uid")
@@ -96,25 +92,9 @@ class LocalStateRepositoryImpl @Inject constructor(
 
     override suspend fun setMeetingUntil(until: Long?) {
         store.edit {
-            if (until == null) {
-                it.remove(Keys.MEETING_UNTIL)
-            } else {
-                it[Keys.MEETING_UNTIL] = until
-                val days = setOf(startOfDay(System.currentTimeMillis()), startOfDay(until)).map(Long::toString)
-                it[Keys.MEETING_DAYS] = (it[Keys.MEETING_DAYS].orEmpty() + days)
-            }
+            if (until == null) it.remove(Keys.MEETING_UNTIL) else it[Keys.MEETING_UNTIL] = until
         }
     }
-
-    override val meetingDays: Flow<Set<Long>> = store.data.map { p ->
-        p[Keys.MEETING_DAYS].orEmpty().mapNotNull(String::toLongOrNull).toSet()
-    }
-
-    private fun startOfDay(ms: Long): Long = java.util.Calendar.getInstance().apply {
-        timeInMillis = ms
-        set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
-        set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
-    }.timeInMillis
 
     override suspend fun cachedHidratacion(): ConfigHidratacion? {
         val p = store.data.first()
@@ -129,11 +109,6 @@ class LocalStateRepositoryImpl @Inject constructor(
         }
     }
 
-    override val lastPhraseIndex: Flow<Int?> = store.data.map { it[Keys.PHRASE_INDEX] }
-    override suspend fun setLastPhraseIndex(index: Int) { store.edit { it[Keys.PHRASE_INDEX] = index } }
-    override suspend fun lastPhraseAt(): Long? = store.data.first()[Keys.PHRASE_AT]
-    override suspend fun setLastPhraseAt(at: Long) { store.edit { it[Keys.PHRASE_AT] = at } }
-
     override val apariencia: Flow<AparienciaApp> = store.data.map { prefs ->
         AparienciaApp(
             tema = runCatching { TemaApp.valueOf(prefs[Keys.APARIENCIA_TEMA] ?: "") }
@@ -147,6 +122,21 @@ class LocalStateRepositoryImpl @Inject constructor(
         store.edit {
             it[Keys.APARIENCIA_TEMA] = apariencia.tema.name
             it[Keys.APARIENCIA_ESCALA] = apariencia.escalaTexto.name
+        }
+    }
+
+    override suspend fun clearUserScopedState() {
+        store.edit {
+            it.remove(Keys.SNOOZES)
+            it.remove(Keys.LAST_EXERCISE)
+            it.remove(Keys.REMINDER_HOUR)
+            it.remove(Keys.REMINDER_MINUTE)
+            it.remove(Keys.INTERVAL_MIN)
+            it.remove(Keys.ACTIVE_DAYS)
+            it.remove(Keys.MEETING_UNTIL)
+            it.remove(MeetingDayKeys.DAYS)
+            it.remove(Keys.HYDRATION_ACTIVE)
+            it.remove(Keys.HYDRATION_INTERVAL)
         }
     }
 

@@ -31,6 +31,8 @@ interface ProfileRepository {
     val profile: Flow<Profile>
     suspend fun saveName(name: String)
     suspend fun saveGoal(goal: Int)
+    /** HU-10: crea `users/{uid}` de forma idempotente si el usuario recién se registró. */
+    suspend fun ensureProfile(name: String, email: String)
 }
 
 interface PreferencesRepository {
@@ -98,18 +100,14 @@ interface LocalStateRepository {
 
     val meetingUntil: Flow<Long?>
     suspend fun setMeetingUntil(until: Long?)
-    /** Inicio (00:00) de los días en que se usó el Modo reunión; no rompen la racha. */
-    val meetingDays: Flow<Set<Long>>
 
     suspend fun cachedHidratacion(): ConfigHidratacion?
     suspend fun cacheHidratacion(config: ConfigHidratacion)
 
-    val lastPhraseIndex: Flow<Int?>
-    suspend fun setLastPhraseIndex(index: Int)
-    suspend fun lastPhraseAt(): Long?
-    suspend fun setLastPhraseAt(at: Long)
-
     /** HU-13: apariencia aplicada al instante y persistida en el dispositivo. */
     val apariencia: Flow<AparienciaApp>
     suspend fun saveApariencia(apariencia: AparienciaApp)
+
+    /** HU-10: borra solo el estado del usuario; conserva onboarding y apariencia. */
+    suspend fun clearUserScopedState()
 }

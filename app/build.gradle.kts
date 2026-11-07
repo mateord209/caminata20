@@ -25,6 +25,7 @@ android {
         // En CI: VERSION_CODE = número de ejecución y VERSION_NAME = tag v* (sin la "v").
         versionCode = (System.getenv("VERSION_CODE") ?: "1").toInt()
         versionName = System.getenv("VERSION_NAME") ?: "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // RIESGO: todo lo que va en BuildConfig queda dentro del APK (ver docs/SEGURIDAD_GROQ.md).
         // Si GROQ_PROXY_URL está definido, la app NO usa GROQ_API_KEY y llama al proxy con el ID token de Firebase.
         buildConfigField("String", "GROQ_API_KEY", "\"${localProperties.getProperty("GROQ_API_KEY", "")}\"")
@@ -119,6 +120,11 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.org.json)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
 // Hilt 2.57 (último compatible con AGP 8.x) trae kotlin-metadata-jvm 2.2; Kotlin 2.4 necesita uno más nuevo.
 configurations.configureEach {
